@@ -1,0 +1,46 @@
+Implement project @MA LPB
+1. Install postgres
+2. CREATE TABLE DATA_MCSTATUS_DEMO1
+     CREATE TABLE IF NOT EXISTS DATA_MCSTATUS_DEMO1(
+	registered TIMESTAMP(3),
+	occurred TIMESTAMP(3),
+	mc_status VARCHAR(50),
+	mc_no VARCHAR(50),
+	process VARCHAR(15)
+	)
+
+3. CREATE TABLE DATA_MQTTBOX_DEMO1
+    CREATE TABLE IF NOT EXISTS DATA_MQTTBOX_DEMO1(
+	registered TIMESTAMP(3),
+	occurred TIMESTAMP(3),
+	broker VARCHAR(50),
+	modbus VARCHAR(50),
+        mac_id VARCHAR(50),
+	mc_no VARCHAR(50),
+	process VARCHAR(15)
+	)
+4. CREATE TABLE DATA_DEVICESTATUS_DEMO1
+     CREATE TABLE IF NOT EXISTS DATA_DEVICESTATUS_DEMO1(
+	registered TIMESTAMP(3),
+	occurred TIMESTAMP(3),
+	device_status VARCHAR(50),
+	mc_no VARCHAR(50),
+	process VARCHAR(15)
+	)
+
+5. # ------ Default Status = stop ------ #
+CREATE TABLE IF NOT EXISTS status_temp_tb (
+    process VARCHAR(20),
+    mc_no VARCHAR(20),
+    status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+
+6. INSERT INTO status_temp_tb  (process, mc_no, status)
+VALUES
+   ('demo1', 'mc1', 'stop'),
+   ('demo1', 'mc2', 'stop'),
+   ('demo1', 'mc3', 'stop'),
+   ('demo1', 'mc4', 'stop'),
+   ('demo1', 'mc5', 'stop'),
+   ('demo1', 'mc6', 'stop'),
+	

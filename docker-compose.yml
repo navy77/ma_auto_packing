@@ -1,0 +1,77 @@
+services:
+  mms_status_mc:
+    build:
+      context: .  
+      dockerfile: Dockerfile
+    image: "mic/mms_auto_packing:1.0.0"
+    container_name: 'mms_status_mc'
+    privileged: true
+    volumes:
+      - ./.env:/app/.env
+      - ./main_status.py:/app/main_status.py
+    # env_file:
+    #   - .env
+    working_dir: /app
+    environment:
+      - TZ=Asia/Bangkok
+    command: ["python", "main_status.py"]
+
+  mms_status_box:
+    image: "mic/mms_auto_packing:1.0.0"
+    container_name: 'mms_status_box'
+    privileged: true
+    volumes:
+      - ./.env:/app/.env
+      - ./main_status_box.py:/app/main_status_box.py
+    # env_file:
+    #   - .env
+    working_dir: /app
+    environment:
+      - TZ=Asia/Bangkok
+    command: ["python", "main_status_box.py"]
+
+  mms_status_device:
+    image: "mic/mms_auto_packing:1.0.0"
+    container_name: 'mms_status_device'
+    privileged: true
+    volumes:
+      - ./.env:/app/.env
+      - ./main_state_device.py:/app/main_state_device.py
+    # env_file:
+    #   - .env
+    working_dir: /app
+    environment:
+      - TZ=Asia/Bangkok
+    command: ["python", "main_state_device.py"]
+
+  # mms_auto_packing:
+  #   image: "mic/mms_auto_packing:1.0.0"
+  #   container_name: 'mms_auto_packing'
+  #   privileged: true
+  #   volumes:
+  #     - ./.env:/app/.env
+  #     - ./app/.env:/app/app/.env
+  #     - ./auto_packing_demo.py:/app/auto_packing_demo.py
+  #     - .logs:/app/logs
+  #   # env_file:
+  #   #   - .env
+  #   #   - ./app/.env
+  #   environment:
+  #     - TZ=Asia/Bangkok
+  #   # working_dir: /app
+  #   command: ["python", "auto_packing_demo.py"]
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    privileged: true
+    container_name: 'ofelia'
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config.ini:/etc/ofelia/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "2"
+    
