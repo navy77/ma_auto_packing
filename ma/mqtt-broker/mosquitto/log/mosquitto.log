@@ -21499,3 +21499,7 @@ To fix this, use `chmod 0700 /mosquitto/data//mosquitto.db.new`.
 1782189339: New client connected from 172.19.0.1:47184 as mqtt_service (p5, c1, k60).
 1782189478: Client mqtt_service [172.19.0.1:47184] disconnected: connection closed by client.
 1782189481: Client device_service [172.19.0.1:52280] disconnected: connection closed by client.
+1782190330: mosquitto version 2.0.20 starting
+1782190330: Config loaded from /mosquitto/config/mosquitto.conf.
+1782190330: Opening ipv4 listen socket on port 1883.
+1782190330: mosquitto version 2.0.20 running

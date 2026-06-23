@@ -1,17 +1,17 @@
 version: '3'
 services:
-  db:
-    image: postgres:17-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    ports:
-      - 5434:5432
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  # db:
+  #   image: postgres:17-alpine
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: postgres
+  #   ports:
+  #     - 5434:5432
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
     image: redis:latest
@@ -36,26 +36,28 @@ services:
     depends_on:
       - redis
 
-  # clickhouse:
-  #   image: clickhouse/clickhouse-server:25.6
-  #   container_name: clickhouse
-  #   user: root
-  #   environment:
-  #     CLICKHOUSE_USER: default
-  #     CLICKHOUSE_PASSWORD: password
-  #   ports:
-  #     - 8123:8123
-  #     - 19001:9000
-  #   env_file:
-  #     - .env
-  #   volumes:
-  #     - ${CLICKHOUSE_DATA}:/var/lib/clickhouse
-  #     - ${CLICKHOUSE_DATA}:/var/logs/clickhouse-server
-  #   ulimits:
-  #     nofile:
-  #       soft: 262144
-  #       hard: 262144
-  #   restart: always
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.6
+    container_name: clickhouse
+    user: root
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: password
+    ports:
+      - 8123:8123
+      - 19001:9000
+    env_file:
+      - .env
+    volumes:
+      - clickhosue_data:/var/lib/clickhouse
+      - clickhosue_data:/var/logs/clickhouse-server
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    restart: always
 
   # ofelia:
   #   image: mcuadros/ofelia:latest
@@ -69,6 +71,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  clickhosue_data:
 
 networks:
   redis-net:
