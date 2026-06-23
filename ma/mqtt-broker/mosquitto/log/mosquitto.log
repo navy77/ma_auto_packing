@@ -21430,3 +21430,72 @@ To fix this, use `chmod 0700 /mosquitto/data//mosquitto.db.new`.
 1782122098: New client connected from 172.19.0.1:34350 as mqtt_service (p5, c1, k60).
 1782122175: Client mqtt_service [172.19.0.1:34350] disconnected: connection closed by client.
 1782122373: Client device_service [172.19.0.1:57914] disconnected: connection closed by client.
+1782177381: mosquitto version 2.1.2 starting
+1782177381: Config loaded from /mosquitto/config/mosquitto.conf.
+1782177381: Bridge support available.
+1782177381: Persistence support available.
+1782177381: TLS support available.
+1782177381: TLS-PSK support available.
+1782177381: Websockets support available.
+1782177381: Opening ipv4 listen socket on port 1883.
+1782177381: mosquitto version 2.1.2 running
+1782178275: mosquitto version 2.1.2 terminating
+1782178275: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782178307: mosquitto version 2.1.2 starting
+1782178307: Config loaded from /mosquitto/config/mosquitto.conf.
+1782178307: Bridge support available.
+1782178307: Persistence support available.
+1782178307: TLS support available.
+1782178307: TLS-PSK support available.
+1782178307: Websockets support available.
+1782178307: Opening ipv4 listen socket on port 1883.
+1782178307: mosquitto version 2.1.2 running
+1782178681: New connection from 172.19.0.1:55808 on port 1883.
+1782178681: New client connected from 172.19.0.1:55808 as nodered50e35bce7453efcd (p4, c1, k60).
+1782178849: New connection from 172.19.0.1:35494 on port 1883.
+1782178849: New client connected from 172.19.0.1:35494 as device_service (p5, c1, k60).
+1782179121: Client device_service [172.19.0.1:35494] disconnected: connection closed by client.
+1782180108: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782181694: New connection from 172.19.0.1:54296 on port 1883.
+1782181694: New client connected from 172.19.0.1:54296 as mqtt-explorer-12dd2785 (p4, c1, k60).
+1782181909: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782182692: Client mqtt-explorer-12dd2785 [172.19.0.1:54296] disconnected.
+1782182697: New connection from 172.19.0.1:57612 on port 1883.
+1782182697: New client connected from 172.19.0.1:57612 as mqtt-explorer-12dd2785 (p4, c1, k60).
+1782183710: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782185511: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782186509: New connection from 172.19.0.1:46990 on port 1883.
+1782186509: New client connected from 172.19.0.1:46990 as device_service (p5, c1, k60).
+1782186919: Client device_service [172.19.0.1:46990] disconnected: connection closed by client.
+1782186979: New connection from 172.19.0.1:36926 on port 1883.
+1782186979: New client connected from 172.19.0.1:36926 as device_service (p5, c1, k60).
+1782187160: Client device_service [172.19.0.1:36926] disconnected: connection closed by client.
+1782187162: New connection from 172.19.0.1:52280 on port 1883.
+1782187162: New client connected from 172.19.0.1:52280 as device_service (p5, c1, k60).
+1782187297: New connection from 172.19.0.1:48196 on port 1883.
+1782187297: New client connected from 172.19.0.1:48196 as mqtt_service (p5, c1, k60).
+1782187312: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782187347: Client mqtt_service [172.19.0.1:48196] disconnected: connection closed by client.
+1782187350: New connection from 172.19.0.1:36184 on port 1883.
+1782187350: New client connected from 172.19.0.1:36184 as mqtt_service (p5, c1, k60).
+1782187375: Client mqtt_service [172.19.0.1:36184] disconnected: connection closed by client.
+1782187378: New connection from 172.19.0.1:44218 on port 1883.
+1782187378: New client connected from 172.19.0.1:44218 as mqtt_service (p5, c1, k60).
+1782187486: Client mqtt_service [172.19.0.1:44218] disconnected: connection closed by client.
+1782187596: New connection from 172.19.0.1:41586 on port 1883.
+1782187596: New client connected from 172.19.0.1:41586 as mqtt_service (p5, c1, k60).
+1782187654: Client mqtt_service [172.19.0.1:41586] disconnected: connection closed by client.
+1782187655: New connection from 172.19.0.1:40738 on port 1883.
+1782187655: New client connected from 172.19.0.1:40738 as mqtt_service (p5, c1, k60).
+1782187661: Client mqtt_service [172.19.0.1:40738] disconnected: connection closed by client.
+1782187668: New connection from 172.19.0.1:48736 on port 1883.
+1782187668: New client connected from 172.19.0.1:48736 as mqtt_service (p5, c1, k60).
+1782187759: Client mqtt_service [172.19.0.1:48736] disconnected: connection closed by client.
+1782187788: New connection from 172.19.0.1:59378 on port 1883.
+1782187788: New client connected from 172.19.0.1:59378 as mqtt_service (p5, c1, k60).
+1782189112: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782189327: Client mqtt_service [172.19.0.1:59378] disconnected: connection closed by client.
+1782189339: New connection from 172.19.0.1:47184 on port 1883.
+1782189339: New client connected from 172.19.0.1:47184 as mqtt_service (p5, c1, k60).
+1782189478: Client mqtt_service [172.19.0.1:47184] disconnected: connection closed by client.
+1782189481: Client device_service [172.19.0.1:52280] disconnected: connection closed by client.

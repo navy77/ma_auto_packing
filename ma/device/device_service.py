@@ -68,6 +68,9 @@ class MqttToRedis:
     async def start(self):
         await self.connect()
         await self.subscribe('mqtt/#')
+        await self.subscribe('status/#')
+        await self.subscribe('alarm/#')
+        # await self.subscribe('data/#')
         await asyncio.Event().wait()
 
     def device_to_redis(self):
@@ -87,17 +90,18 @@ class MqttToRedis:
                     "modbus": modbus,
                     "mac_id": mac_id,
                 }
-                self.redis_client.hset("devices_list", device_id, json.dumps(payload))
+                self.redis_client.hset("devices", device_id, json.dumps(payload))
 
             except Exception as e:
                 logging.error(f"Error Redis: {e}")
             finally:
                 self.queue.task_done()
+                
     
     def check_device(self):
         while True:
             try:
-                all_devices = self.redis_client.hgetall("devices_list")
+                all_devices = self.redis_client.hgetall("devices")
                 now = datetime.now(timezone.utc)
                 devices_status = {}
                 
@@ -120,15 +124,15 @@ class MqttToRedis:
                     
                     shift = self.work_shift(time_current=now)
                     # record to postgres
-                    self.insert_postgres(shift,device_id,broker,modbus,mac_id)
+                    self.insert_postgres_device(shift,device_id,broker,modbus,mac_id)
 
-                self.redis_client.set("device_status", json.dumps(devices_status))
+                self.redis_client.set("device_all", json.dumps(devices_status))
 
             except Exception as e:
                 logging.error(f"Error check_device: {e}")
             time.sleep(self.device_loop)
 
-    def insert_postgres(self,shift,device_id,broker,modbus,mac_id):
+    def insert_postgres_device(self,shift,device_id,broker,modbus,mac_id):
         cursor = self.db_conn.cursor()
         query = """INSERT INTO device_tb (shift,device_id, broker, modbus,mac_id) VALUES (%s,%s,%s, %s, %s)"""
         cursor.execute(query, (shift,device_id, broker, modbus,mac_id))
@@ -142,6 +146,7 @@ class MqttToRedis:
         else:
             shift = "N"
         return shift
+    
 async def main():
     mqtt_client = MqttToRedis()
     await mqtt_client.start()

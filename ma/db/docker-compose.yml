@@ -13,5 +13,63 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379
+    command: redis-server --save 60 1 --loglevel warning
+    restart: always
+    networks:
+      - redis-net
+    volumes:
+      - redis_data:/data
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    ports:
+      - 5540:5540
+    restart: always
+    networks:
+      - redis-net
+    depends_on:
+      - redis
+
+  # clickhouse:
+  #   image: clickhouse/clickhouse-server:25.6
+  #   container_name: clickhouse
+  #   user: root
+  #   environment:
+  #     CLICKHOUSE_USER: default
+  #     CLICKHOUSE_PASSWORD: password
+  #   ports:
+  #     - 8123:8123
+  #     - 19001:9000
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ${CLICKHOUSE_DATA}:/var/lib/clickhouse
+  #     - ${CLICKHOUSE_DATA}:/var/logs/clickhouse-server
+  #   ulimits:
+  #     nofile:
+  #       soft: 262144
+  #       hard: 262144
+  #   restart: always
+
+  # ofelia:
+  #   image: mcuadros/ofelia:latest
+  #   privileged: true
+  #   container_name: 'ofelia${NO}'
+  #   restart: always
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - ./config.ini:/etc/ofelia/config.ini
+
 volumes:
   postgres_data:
+  redis_data:
+
+networks:
+  redis-net:
+    driver: bridge

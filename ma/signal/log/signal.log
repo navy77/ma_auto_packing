@@ -50,3 +50,11 @@
 2026-06-22 16:45:43,509 - ERROR - Error Redis: 'str' object has no attribute 'astimezone'
 2026-06-22 16:46:38,976 - WARNING - Connected to MQTT Broker
 2026-06-22 16:54:58,863 - WARNING - Connected to MQTT Broker
+2026-06-23 11:01:37,020 - WARNING - Connected to MQTT Broker
+2026-06-23 11:02:30,423 - WARNING - Connected to MQTT Broker
+2026-06-23 11:02:58,255 - WARNING - Connected to MQTT Broker
+2026-06-23 11:06:36,960 - WARNING - Connected to MQTT Broker
+2026-06-23 11:07:35,920 - WARNING - Connected to MQTT Broker
+2026-06-23 11:07:48,552 - WARNING - Connected to MQTT Broker
+2026-06-23 11:09:48,357 - WARNING - Connected to MQTT Broker
+2026-06-23 11:35:39,886 - WARNING - Connected to MQTT Broker

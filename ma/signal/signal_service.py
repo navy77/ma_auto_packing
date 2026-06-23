@@ -81,7 +81,7 @@ class MqttToRedis:
             status = data_dict.get("status")
 
             # get device_status redis
-            device_status_redis = self.redis_client.get("device_status")
+            device_status_redis = self.redis_client.get("device_all")
             device_status_dict = json.loads(device_status_redis)
             try:
                 if device_status_redis:
@@ -101,10 +101,10 @@ class MqttToRedis:
                 shift = self.work_shift()
                 # send to redis
                 if mqtt_topic == 'status':
-                    self.redis_client.hset("status_list", device_id, json.dumps(payload))
+                    self.redis_client.hset("status", device_id, json.dumps(payload))
                     self.insert_postgres(table= os.environ['STATUS_TB'],shift=shift,device_id=device_id,status=status)
                 else:
-                    self.redis_client.hset("alarm_list", device_id, json.dumps(payload))
+                    self.redis_client.hset("alarm", device_id, json.dumps(payload))
                     self.insert_postgres(table= os.environ['ALARM_TB'],shift=shift,device_id=device_id,status=status)
 
             except Exception as e:
@@ -112,40 +112,6 @@ class MqttToRedis:
             finally:
                 self.queue.task_done()
     
-    def check_device(self):
-        while True:
-            try:
-                all_devices = self.redis_client.hgetall("devices_list")
-                now = datetime.now(timezone.utc)
-                devices_status = {}
-                
-                for device_id in self.device_list:
-                    payload = all_devices.get(device_id)
-
-                    if payload:
-                        payload_dict = json.loads(payload)
-                        last_seen = datetime.fromisoformat(payload_dict['timestamp'])
-                        time_diff = (now - last_seen).total_seconds()
-                        status = "online" if time_diff <= self.device_loop else "offline"
-
-                        broker = payload_dict.get("broker")
-                        modbus = payload_dict.get("modbus")
-                        mac_id = payload_dict.get("mac_id")
-                    else:
-                        status = "offline"
-                        broker, modbus, mac_id = 0, 0, "-"
-
-                    devices_status[device_id] = status
-                    
-                    # record to postgres
-                    self.insert_postgres(device_id,broker,modbus,mac_id)
-
-                self.redis_client.set("device_status", json.dumps(devices_status))
-
-            except Exception as e:
-                logging.error(f"Error check_device: {e}")
-            time.sleep(60)
-
     def insert_postgres(self,table,shift,device_id,status):
         cursor = self.db_conn.cursor()
         query = f"""INSERT INTO {table} (shift,device_id, status) VALUES (%s,%s,%s)"""
