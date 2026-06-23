@@ -1,28 +1,27 @@
 
 services:
   mms_app:
-    build:
-      context: .  
-      dockerfile: Dockerfile
+    image: "mic/mms_ma:1.0.0"
     environment:
       - TZ=Asia/Bangkok
-    image: "mic/mms_ma:1.0.0"
     container_name: mms_app
     privileged: true
     volumes:
+      - ./log:/app/log
       - ./.env:/app/.env
-    env_file:
-      - .env
+
     command: ["python", "signal_service.py"]
+    restart: always
 
   schedule:
     image: "mic/mms_ma:1.0.0"
-    container_name: 'schedule'
+    container_name: schedule
     privileged: true
     volumes:
+      - ./log:/app/log
       - ./.env:/app/.env
-    env_file:
-      - .env
+      - ./time.json:/app/time.json
+
     environment:
       - TZ=Asia/Bangkok
     command: ["python", "schedule.py"]
@@ -35,18 +34,6 @@ services:
     restart: always
     volumes:
       - ./config.ini:/etc/ofelia/config.ini
-
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    restart: always
-    ports:
-      - 3000:3000
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana_data:/var/lib/grafana
 
 
 

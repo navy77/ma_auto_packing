@@ -15,8 +15,6 @@ class MqttToRedis:
         self.clickhouse_client = clickhouse_connect.get_client(host=os.environ["CLICKHOUSE_HOST"], port=int(os.environ["CLICKHOUSE_PORT"]), username=os.environ["CLICKHOUSE_USER"], password=os.environ["CLICKHOUSE_PASSWORD"])
         self.redis_client = redis.Redis(host= os.environ["REDIS_HOST"], port=6379, decode_responses=True)
 
-        self.redis_client = redis.Redis(host= os.environ["REDIS_HOST"], port=6379, decode_responses=True)
-
         self.client = MQTTClient(os.environ["DEVICE_CLIENT"])
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
@@ -176,7 +174,7 @@ class MqttToRedis:
                         payload_dict = json.loads(payload)
                         last_seen = datetime.fromisoformat(payload_dict['timestamp'])
                         time_diff = (now - last_seen).total_seconds()
-                        status = "online" if time_diff <= self.device_loop+30 else "offline"
+                        status = "online" if time_diff <= (self.device_loop+30) else "offline"
                         if status == "online":
                             broker = payload_dict.get("broker")
                             modbus = payload_dict.get("modbus")

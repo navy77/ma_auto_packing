@@ -1,17 +1,5 @@
 version: '3'
 services:
-  # db:
-  #   image: postgres:17-alpine
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: postgres
-  #   ports:
-  #     - 5434:5432
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
     image: redis:latest
@@ -46,8 +34,7 @@ services:
     ports:
       - 8123:8123
       - 19001:9000
-    env_file:
-      - .env
+
     volumes:
       - clickhosue_data:/var/lib/clickhouse
       - clickhosue_data:/var/logs/clickhouse-server

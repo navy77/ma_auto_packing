@@ -8,7 +8,7 @@ import pandas as pd
 class ScheduleData:
     def __init__(self):
         dotenv.load_dotenv()
-        self.dotenv_path = ".env"
+        
         self.clickhouse_client = clickhouse_connect.get_client(host=os.environ["CLICKHOUSE_HOST"], port=int(os.environ["CLICKHOUSE_PORT"]), username=os.environ["CLICKHOUSE_USER"], password=os.environ["CLICKHOUSE_PASSWORD"])
         self.redis_client = redis.Redis(host= os.environ["REDIS_HOST"], port=6379, decode_responses=True)
         self.device_list = os.environ["DEVICE_LIST"].split(',')
@@ -31,7 +31,11 @@ class ScheduleData:
 
             # get status 
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            last_checked = os.environ["TIME_STATUS"]
+
+            # read last_checked
+            with open("time.json","r") as f:
+                data = json.load(f)
+            last_checked = data["time_status"]
 
             if last_checked =="":
                 query = 'SELECT * FROM default.status_raw_tb WHERE created_at < %(end)s'
@@ -54,9 +58,17 @@ class ScheduleData:
                 df['ts'] = df['ts'].dt.tz_localize(None)
                 self.clickhouse_client.insert_df(table='status_tb',df=df)
 
-                dotenv.set_key(self.dotenv_path, "TIME_STATUS", now)
+                # write 
+                data["time_status"] = now
+                with open("time.json", "w") as f:
+                    json.dump(data, f)
+
+
+                print("check_status success")
+                logging.warning("check_status success")
 
         except Exception as e:
+            print(f"Error check_status: {e}")
             logging.error(f"Error check_status: {e}")
 
     def check_alarm(self):
@@ -69,7 +81,11 @@ class ScheduleData:
 
             # get alarm 
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            last_checked = os.environ["TIME_STATUS"]
+            # read last_checked
+            with open("time.json","r") as f:
+                data = json.load(f)
+            last_checked = data["time_alarm"]
+
 
             if last_checked =="":
                 query = 'SELECT * FROM default.alarm_raw_tb WHERE created_at < %(end)s'
@@ -94,9 +110,16 @@ class ScheduleData:
                 
                 self.clickhouse_client.insert_df(table='alarm_tb',df=df)
 
-                dotenv.set_key(self.dotenv_path, "TIME_ALARM", now)
+                # write 
+                data["time_alarm"] = now
+                with open("time.json", "w") as f:
+                    json.dump(data, f)
+
+                print("check_alarm success")
+                logging.warning("check_alarm success")
         
         except Exception as e:
+            print(f"Error check_alarm: {e}")
             logging.error(f"Error check_alarm: {e}")
 
 if __name__ == "__main__":

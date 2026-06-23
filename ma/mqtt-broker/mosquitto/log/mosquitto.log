@@ -21503,3 +21503,21 @@ To fix this, use `chmod 0700 /mosquitto/data//mosquitto.db.new`.
 1782190330: Config loaded from /mosquitto/config/mosquitto.conf.
 1782190330: Opening ipv4 listen socket on port 1883.
 1782190330: mosquitto version 2.0.20 running
+1782225276: mosquitto version 2.0.22 starting
+1782225276: Config loaded from /mosquitto/config/mosquitto.conf.
+1782225276: Opening ipv4 listen socket on port 1883.
+1782225276: mosquitto version 2.0.22 running
+1782225283: New connection from 172.25.0.1:51082 on port 1883.
+1782225283: New client connected from 172.25.0.1:51082 as nodered_e78314cbefe62f63 (p2, c1, k60).
+1782226006: New connection from 172.25.0.1:59040 on port 1883.
+1782226006: New client connected from 172.25.0.1:59040 as device_service (p5, c1, k60).
+1782226439: Client device_service closed its connection.
+1782227077: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782227158: New connection from 172.25.0.1:47944 on port 1883.
+1782227158: New client connected from 172.25.0.1:47944 as device_service (p5, c1, k60).
+1782227260: Client device_service closed its connection.
+1782227713: New connection from 172.25.0.1:55626 on port 1883.
+1782227713: New client connected from 172.25.0.1:55626 as device_service (p5, c1, k60).
+1782227813: Client device_service closed its connection.
+1782227839: New connection from 172.25.0.1:36976 on port 1883.
+1782227839: New client connected from 172.25.0.1:36976 as device_service (p5, c1, k60).
