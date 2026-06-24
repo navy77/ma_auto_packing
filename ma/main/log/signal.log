@@ -1,6 +1,21 @@
-2026-06-23 22:17:19,452 - WARNING - Connected to MQTT Broker
-2026-06-24 11:01:05,790 - WARNING - Connected to MQTT Broker
-2026-06-24 11:09:33,061 - WARNING - Connected to MQTT Broker
-2026-06-24 11:28:38,115 - WARNING - Connected to MQTT Broker
-2026-06-24 11:37:54,456 - WARNING - Connected to MQTT Broker
-2026-06-24 16:14:36,985 - WARNING - Connected to MQTT Broker
+2026-06-24 21:43:41,284 - WARNING - Connected to MQTT Broker
+2026-06-24 21:44:42,547 - WARNING - Unexpected Http Driver Exception
+2026-06-24 21:44:42,548 - ERROR - Error Redis status: Error ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) executing HTTP request attempt 2 (http://192.168.1.30:8123)
+2026-06-24 21:44:42,552 - WARNING - Unexpected Http Driver Exception
+2026-06-24 21:44:42,552 - ERROR - Error Redis status: Error ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) executing HTTP request attempt 2 (http://192.168.1.30:8123)
+2026-06-24 21:44:42,555 - WARNING - Unexpected Http Driver Exception
+2026-06-24 21:44:42,555 - ERROR - Error Redis status: Error ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) executing HTTP request attempt 2 (http://192.168.1.30:8123)
+2026-06-24 21:44:42,880 - WARNING - Unexpected Http Driver Exception
+2026-06-24 21:44:42,880 - ERROR - Error check_device: Error ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) executing HTTP request attempt 2 (http://192.168.1.30:8123)
+2026-06-24 21:44:44,013 - WARNING - Unexpected Http Driver Exception
+2026-06-24 21:44:44,014 - ERROR - Error Redis alarm: Error ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) executing HTTP request attempt 2 (http://192.168.1.30:8123)
+2026-06-24 21:44:44,028 - WARNING - Unexpected Http Driver Exception
+2026-06-24 21:44:44,028 - ERROR - Error Redis alarm: Error ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) executing HTTP request attempt 2 (http://192.168.1.30:8123)
+2026-06-24 21:44:44,059 - WARNING - Unexpected Http Driver Exception
+2026-06-24 21:44:44,059 - ERROR - Error Redis alarm: Error ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) executing HTTP request attempt 2 (http://192.168.1.30:8123)
+2026-06-24 22:35:43,910 - ERROR - Error check_device: Attempt to execute concurrent queries within the same session.Please use a separate client instance per thread/process.
+2026-06-24 22:36:43,912 - ERROR - Error check_device: Attempt to execute concurrent queries within the same session.Please use a separate client instance per thread/process.
+2026-06-24 22:37:43,913 - ERROR - Error check_device: Attempt to execute concurrent queries within the same session.Please use a separate client instance per thread/process.
+2026-06-24 22:38:43,916 - ERROR - Error Redis alarm: Attempt to execute concurrent queries within the same session.Please use a separate client instance per thread/process.
+2026-06-24 22:38:43,917 - ERROR - Error Redis alarm: Attempt to execute concurrent queries within the same session.Please use a separate client instance per thread/process.
+2026-06-25 00:04:00,257 - WARNING - Connected to MQTT Broker
