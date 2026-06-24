@@ -5,9 +5,6 @@ from fastapi.responses import JSONResponse
 from router import status
 
 
-import uuid
-import datetime
-
 app = FastAPI()
 
 ##########################################################################################################

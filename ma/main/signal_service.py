@@ -63,7 +63,7 @@ class MqttToRedis:
         await self.subscribe('mqtt/#')
         await self.subscribe('status/#')
         await self.subscribe('alarm/#')
-        # await self.subscribe('data/#')
+        await self.subscribe('data/#')
         await asyncio.Event().wait()
 
     def device_to_redis(self):
@@ -102,6 +102,8 @@ class MqttToRedis:
                 self.status(device_id,data)
             elif topic == "alarm":
                 self.alarm(device_id,data)
+            elif topic == "data":
+                self.data(device_id,data)
             else:
                 pass
             self.queue.task_done()
@@ -160,6 +162,24 @@ class MqttToRedis:
         except Exception as e:
             logging.error(f"Error Redis alarm: {e}")
 
+    def data(self,device_id,data):
+        data_dict = json.loads(data)
+        production = data_dict.get("data")
+        ########################
+        try:
+            now = datetime.now(timezone.utc).isoformat()
+            shift = self.work_shift(time_current=datetime.now(timezone.utc))
+            payload = {
+                "timestamp": now,
+                "device_id": device_id,
+                "data": production
+            }
+            self.redis_client.hset("data", device_id, json.dumps(payload))
+            # record to clickhouse
+            self.insert_clickhouse_data(shift,device_id,production)
+        except Exception as e:
+            logging.error(f"Error Redis data: {e}")
+
     def check_device(self):
         while True:
             try:
@@ -211,7 +231,12 @@ class MqttToRedis:
         data = [[shift, device_id, status]]
         self.clickhouse_client.insert('alarm_raw_tb', data, 
             column_names=['shift', 'device_id', 'status'])
-
+        
+    def insert_clickhouse_data(self,shift,device_id,data):
+        data = [[shift, device_id, data]]
+        self.clickhouse_client.insert('data_tb', data, 
+            column_names=['shift', 'device_id', 'data'])
+        
     def work_shift(self,time_current):
         thai_now = time_current.astimezone(ZoneInfo("Asia/Bangkok"))
         hour = thai_now.hour

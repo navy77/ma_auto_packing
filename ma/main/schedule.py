@@ -4,7 +4,7 @@ import dotenv
 import redis
 from datetime import datetime
 import pandas as pd
-
+from zoneinfo import ZoneInfo
 class ScheduleData:
     def __init__(self):
         dotenv.load_dotenv()
@@ -49,13 +49,19 @@ class ScheduleData:
 
             if not df_status.empty:
                 df = pd.merge(df_device,df_status,on='device_id',how='left')
+                df['created_at'] = df['created_at'].fillna(now)
+                mask = (df['shift'].isna())
+                df.loc[mask, 'shift'] = df.loc[mask, 'created_at'].apply(self.work_shift)
+
                 df['status'] = df.apply(lambda row: row['status_y'] if row['status_x'] == "online" else 'offline', axis=1)
+               
                 df = df.fillna(0)
                 df.rename(columns={'created_at': 'ts'}, inplace=True)
                 df = df[['ts','device_id','shift', 'status']]
                 df['ts'] = pd.to_datetime(df['ts'], utc=True)
                 df['ts'] = df['ts'].dt.tz_convert('Asia/Bangkok')
                 df['ts'] = df['ts'].dt.tz_localize(None)
+
                 self.clickhouse_client.insert_df(table='status_tb',df=df)
 
                 # write 
@@ -99,6 +105,10 @@ class ScheduleData:
 
             if not df_status.empty:
                 df = pd.merge(df_device,df_status,on='device_id',how='left')
+                df['created_at'] = df['created_at'].fillna(now)
+                mask = (df['shift'].isna())
+                df.loc[mask, 'shift'] = df.loc[mask, 'created_at'].apply(self.work_shift)
+
                 df['status'] = df.apply(lambda row: row['status_y'] if row['status_x'] == "online" else 'offline', axis=1)
                 df = df.fillna(0)
 
@@ -122,6 +132,14 @@ class ScheduleData:
             print(f"Error check_alarm: {e}")
             logging.error(f"Error check_alarm: {e}")
 
+    def work_shift(self,ts):
+        hour = ts.hour
+        if 7 <= hour < 19:
+            shift = "M"
+        else:
+            shift = "N"
+        return shift
+    
 if __name__ == "__main__":
     scheduler = ScheduleData()
     scheduler.main()

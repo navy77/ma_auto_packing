@@ -43,3 +43,12 @@ CREATE TABLE device_tb(
     mac_id String
 ) ENGINE = MergeTree()
 ORDER BY created_at ;
+
+CREATE TABLE data_tb(
+    created_at DateTime('Asia/Bangkok') DEFAULT now(),
+    status String,
+    shift String,
+    device_id String,
+    data Int32
+) ENGINE = MergeTree()
+ORDER BY created_at ;

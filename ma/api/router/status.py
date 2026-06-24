@@ -4,15 +4,15 @@ from datetime import datetime
 from collections import defaultdict
 from datetime import datetime
 import pandas as pd 
+import calendar
 
 router = APIRouter()
 
 # get current status 
-@router.get("/current/{div}/{process}/{mc}")
-def get_current_status_by_mc(div:str,process:str,mc:str):
-    query = """SELECT ts,shift,device_id,status FROM (SELECT *, row_number() 
-    OVER (PARTITION BY device_id ORDER BY ts DESC)AS rn FROM default.status_tb) 
-    WHERE rn = 1 AND device_id = %(mc)s """
+@router.get("/current/{mc}")
+def get_current_status_by_mc(mc:str):
+    query = """SELECT ts,shift,device_id,status FROM default.status_tb  
+    WHERE device_id = %(mc)s ORDER BY ts DESC LIMIT 1"""
     try:
         result = client.query(query, {'mc': mc})
         rows = result.result_rows
@@ -27,96 +27,220 @@ def get_current_status_by_mc(div:str,process:str,mc:str):
         raise HTTPException(status_code=500, detail=str(e))
     
 # get status ratio daily
-@router.get("/ratio/{div}/{process}/{mc}")
-def get_status_ratio_by_mc(div:str,process:str,mc:str):
+@router.get("/ratio-daily/{mc}")
+def get_status_ratio_daily_by_mc(mc:str):
     start = datetime.now().strftime("%Y-%m-%d 07:00:00")
     end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    query = """SELECT ts,shift,device_id,status FROM default.status_tb WHERE device_id = %(mc)s AND  ts BETWEEN %(start)s AND %(end)s ORDER BY ts DESC"""
+    query = """SELECT ts,shift,device_id,status FROM default.status_tb WHERE device_id = %(mc)s 
+    AND  ts BETWEEN %(start)s AND %(end)s ORDER BY ts ASC"""
 
     try:
         params = {'mc': mc, 'start': start, 'end': end}
         result = client.query(query, params)
-        rows = result.result_rows
-        column_names = result.column_names
-        status = [dict(zip(column_names, row)) for row in rows]
-        df_status = pd.DataFrame(status)
+        df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
 
-        if not df_status.empty:
-            df_status = df_status.sort_values(by='ts', ascending=False)
-            # call summary
-            result = status_summary_duration(df_status)
-            return result.to_dict(orient="records")
+        df_status = df_status.sort_values(['ts'])
+        df_status['next_ts'] = df_status['ts'].shift(-1)
+        df_status['next_ts'] = df_status['next_ts'].fillna(pd.to_datetime(end))
+
+        df_status['duration'] = ((df_status['next_ts'] - df_status['ts']).dt.total_seconds()).round(0)
+        df = df_status.groupby(['status'])['duration'].sum().reset_index()
+        # find ratio %
+        df = df.groupby(['status'])['duration'].sum().reset_index()
+        total_duration = df['duration'].sum()
+        df['ratio'] = ((df['duration'] / total_duration) * 100).round(0)
+
+        if not df.empty:
+            return df.to_dict(orient="records")
         else:
             raise HTTPException(status_code=400, detail="Item not found")
-        # if not rows:
-        #     raise HTTPException(status_code=404, detail="Data not found")
-        # column_names = result.column_names
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# get status ratio monthly
+@router.get("/ratio-monthly/{mc}")
+def get_status_ratio_monthly_by_mc(mc: str):
+    # find end month
+    year = datetime.now().year
+    month = datetime.now().month
+    last_day = calendar.monthrange(year,month )[1]
+
+    start = datetime.now().strftime("%Y-%m-01 07:00:00")
+    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    query = """SELECT ts, status FROM default.status_tb 
+               WHERE device_id = %(mc)s AND  ts BETWEEN %(start)s AND %(end)s
+               ORDER BY ts ASC"""
     
-        # data = [dict(zip(column_names, row)) for row in x]
-        # return data
+    try:
+        params = {'mc': mc, 'start': start, 'end': end}
+        result = client.query(query, params)
+        df = pd.DataFrame(result.result_rows, columns=result.column_names)
+
+        all_days = pd.date_range(start=f"{year}-{month:02d}-01", end=f"{year}-{month:02d}-{last_day}")
+
+        df['ts'] = pd.to_datetime(df['ts'])
+        df['next_ts'] = df['ts'].shift(-1).fillna(pd.to_datetime(end))
+        df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds() / 60.).round(0)
+        df['date'] = df['ts'].dt.strftime('%Y-%m-%d')
+        
+        daily_summary = df.groupby(['date', 'status'])['duration'].sum().reset_index()
+        
+        result_data = []
+        for d in all_days:
+            date_str = d.strftime('%Y-%m-%d')
+            day_data = daily_summary[daily_summary['date'] == date_str]
+            
+            total_d = day_data['duration'].sum()
     
+            details = []
+            if total_d > 0:
+                day_data = day_data.copy()
+                day_data['ratio'] = (day_data['duration'] / total_d * 100).round(0)
+                details = day_data[['status', 'duration', 'ratio']].to_dict(orient='records')
+            
+            result_data.append({
+                "date": date_str,
+                "details": details
+            })
+            
+        return {"daily_data": result_data}
+
+    except Exception as e:
+        return {"error": str(e)}
+    
+# get status count daily
+@router.get("/count-daily/{mc}")
+def get_status_count_daily_by_mc(mc:str):
+    start = datetime.now().strftime("%Y-%m-%d 07:00:00")
+    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    query = """SELECT ts,shift,device_id,status FROM default.status_tb WHERE device_id = %(mc)s AND  
+    ts BETWEEN %(start)s AND %(end)s ORDER BY ts ASC"""
+
+    try:
+        params = {'mc': mc, 'start': start, 'end': end}
+        result = client.query(query, params)
+        df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
+        if df_status.empty:
+            raise HTTPException(status_code=400, detail="Item not found")
+        
+        df = df_status.groupby('status').size().reset_index(name='count')
+
+        # find ratio %
+        total_count = df['count'].sum()
+        df['ratio'] = ((df['count'] / total_count) * 100).round(0)
+
+        if not df.empty:
+            return df.to_dict(orient="records")
+        else:
+            raise HTTPException(status_code=400, detail="Item not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-def calculate_summary_without_pandas(rows):
-    # 1. จัดกลุ่มข้อมูลตาม date และ mc_no
-    # โครงสร้าง: grouped_data[date][mc_no] = list_of_rows
-    grouped_data = defaultdict(lambda: defaultdict(list))
+# get status count monthly
+@router.get("/count-monthly/{mc}")
+def get_status_count_monthly_by_mc(mc: str):
+    # find end month
+    year = datetime.now().year
+    month = datetime.now().month
+    last_day = calendar.monthrange(year,month )[1]
+
+    start = datetime.now().strftime("%Y-%m-01 07:00:00")
+    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    query = """SELECT ts, status FROM default.status_tb 
+               WHERE device_id = %(mc)s AND  ts BETWEEN %(start)s AND %(end)s
+               ORDER BY ts ASC"""
     
-    for row in rows:
-        # สมมติลำดับคือ: ts(0), shift(1), device_id(2), status(3)
-        ts, _, mc, status = row
+    try:
+        params = {'mc': mc, 'start': start, 'end': end}
+        result = client.query(query, params)
+        df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
+        if df_status.empty:
+            raise HTTPException(status_code=400, detail="Item not found")
         
-        # ปรับ logic วันที่ (ถ้าชั่วโมง < 7 ให้เป็นวันก่อนหน้า)
-        date = (ts if ts.hour >= 7 else ts - datetime.timedelta(days=1)).date()
-        grouped_data[date][mc].append({'ts': ts, 'status': status})
+        df_status['ts'] = pd.to_datetime(df_status['ts'])
+        df_status['date'] = df_status['ts'].dt.strftime('%Y-%m-%d')
 
-    summary_results = []
+        daily_counts = df_status.groupby(['date', 'status']).size().reset_index(name='count')
 
-    # 2. คำนวณ duration และ ratio
-    for date, mcs in grouped_data.items():
-        for mc, data in mcs.items():
-            # เรียงลำดับตามเวลา
-            data.sort(key=lambda x: x['ts'])
+        all_days = pd.date_range(start=f"{year}-{month:02d}-01", end=f"{year}-{month:02d}-{last_day}")
+        
+        result_data = []
+        for d in all_days:
+            date_str = d.strftime('%Y-%m-%d')
+            day_data = daily_counts[daily_counts['date'] == date_str]
             
-            # คำนวณความต่างเวลา (Duration)
-            status_durations = defaultdict(float)
-            for i in range(len(data) - 1):
-                duration = (data[i+1]['ts'] - data[i]['ts']).total_seconds()
-                status = data[i]['status']
-                status_durations[status] += duration
+            total_count_day = day_data['count'].sum()
+    
+            details = []
+            if total_count_day > 0:
+                day_data = day_data.copy()
+                day_data['ratio'] = (day_data['count'] / total_count_day * 100).round(0)
+                details = day_data[['status', 'count', 'ratio']].to_dict(orient='records')
             
-            # คำนวณยอดรวมเพื่อหา Ratio
-            total_duration = sum(status_durations.values())
+            result_data.append({
+                "date": date_str,
+                "details": details
+            })
             
-            # 3. จัดรูปผลลัพธ์
-            for status, duration in status_durations.items():
-                ratio = round((duration / total_duration) * 100, 2) if total_duration > 0 else 0
-                summary_results.append({
-                    "date": str(date),
-                    "mc_no": mc,
-                    "status": status,
-                    "duration": duration,
-                    "ratio": ratio
-                })
-                
-    return summary_results
+        return {"daily_data": result_data}
+    except Exception as e:
+        return {"error": str(e)}
 
-def status_summary_duration(df):
+# get status ratio shift monthly
+@router.get("/ratio-monthly/{mc}/{shift}")
+def get_status_ratio__shift_monthly_by_mc(mc: str,shift:str):
+    # find end month
+    year = datetime.now().year
+    month = datetime.now().month
+    last_day = calendar.monthrange(year,month )[1]
 
-    df['ts'] = pd.to_datetime(df['ts'])
-    df['date'] = df['ts'].dt.date
-    df['date'] = df['ts'].apply(lambda x: (x - pd.Timedelta(days=1)).date() if x.hour < 7 else x.date())
-    df = df.sort_values(by=['device_id','ts'], ascending=[True,True])
-    df['end'] = df.groupby(['date', 'device_id'])['ts'].shift(-1)
-    df['duration'] = (df['end'] - df['ts']).dt.total_seconds()
-    df.to_csv("df.csv",index =False)
-    df = df.groupby(['date', 'device_id', 'status'], as_index=False)['duration'].sum()
-    df = df[['date','device_id','status','duration']]
-    # find ratio %
-    df['ratio'] = df.groupby(['date', 'device_id'])['duration'].transform(lambda x: (x / x.sum()) * 100)
-    df['ratio'] = df['ratio'].round(2)
-    df.to_csv("df2.csv",index =False)
+    start = datetime.now().strftime("%Y-%m-01 07:00:00")
+    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    return df
+    query = """SELECT ts, status ,shift FROM default.status_tb 
+               WHERE device_id = %(mc)s AND ts BETWEEN %(start)s AND %(end)s
+                AND shift = %(shift)s ORDER BY ts ASC"""
+    
+    try:
+        params = {'mc': mc, 'start': start,'end': end,'shift': shift}
+        result = client.query(query, params)
+        df = pd.DataFrame(result.result_rows, columns=result.column_names)
+        if df.empty:
+            raise HTTPException(status_code=400, detail="Item not found")
+        
+        all_days = pd.date_range(start=f"{year}-{month:02d}-01", end=f"{year}-{month:02d}-{last_day}")
+
+        df['ts'] = pd.to_datetime(df['ts'])
+        df['next_ts'] = df['ts'].shift(-1).fillna(pd.to_datetime(end))
+        df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds() / 60.).round(0)
+        df['date'] = df['ts'].dt.strftime('%Y-%m-%d')
+        
+        daily_summary = df.groupby(['date', 'shift', 'status'])['duration'].sum().reset_index()
+        
+        result_data = []
+        for d in all_days:
+            date_str = d.strftime('%Y-%m-%d')
+            day_data = daily_summary[daily_summary['date'] == date_str]
+            
+            total_d = day_data['duration'].sum()
+    
+            details = []
+            if total_d > 0:
+                day_data = day_data.copy()
+                day_data['ratio'] = (day_data['duration'] / total_d * 100).round(0)
+                details = day_data[['shift', 'status', 'duration', 'ratio']].to_dict(orient='records')
+            
+            result_data.append({
+                "date": date_str,
+                "details": details
+            })
+            
+        return {"shift": shift,"daily_data": result_data}
+
+    except Exception as e:
+        return {"error": str(e)}
+    

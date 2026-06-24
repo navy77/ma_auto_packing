@@ -1,0 +1,6 @@
+mosquitto/log/
+kafka_data/
+*.log
+*.db
+__pycache__
+.git
