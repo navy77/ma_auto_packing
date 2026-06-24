@@ -21542,3 +21542,10 @@ To fix this, use `chmod 0700 /mosquitto/data//mosquitto.db.new`.
 1782322626: Saving in-memory database to /mosquitto/data//mosquitto.db.
 1782324427: Saving in-memory database to /mosquitto/data//mosquitto.db.
 1782326228: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782327818: Client device_service closed its connection.
+1782327872: Client nodered_28091501c997af5b closed its connection.
+1782327872: Client mqtt-explorer closed its connection.
+1782342500: mosquitto version 2.0.22 starting
+1782342500: Config loaded from /mosquitto/config/mosquitto.conf.
+1782342500: Opening ipv4 listen socket on port 1883.
+1782342500: mosquitto version 2.0.22 running

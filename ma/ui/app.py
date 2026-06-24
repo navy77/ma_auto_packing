@@ -72,8 +72,8 @@ def status_shift_monthly(shift_name):
 def status_timeline():
     try:
         response = requests.get("http://127.0.0.1:8001/status/timeline/mc1",timeout=5)
+
         if response.status_code == 200:
-            raw_data = response.json()
 
             return response.json()
         return []
@@ -186,34 +186,34 @@ def status_shifts_chart():
     }
     st_echarts(options=options, height=chart_height)
 
-def status_timeline_chart():
-
-    rows = status_timeline()
+def status_timeline_chart(device):
 
     color_map = {
         "run": "#22c55e",
         "stop": "#ef4444",
         "alarm": "#f59e0b",
-        "offline": "#64748b"
+        "unknown": "#64748b"
     }
+
+    def to_ms(dt):
+        return int(dt.timestamp() * 1000)
 
     series_data = []
 
     for row in rows:
 
-        start = datetime.fromisoformat(
-            row["ts"]
-        )
+        start_dt = datetime.fromisoformat(row["ts"])
 
-        end = start + timedelta(
+        end_dt = start_dt + timedelta(
             seconds=row["duration"]
         )
 
         series_data.append({
             "name": row["status"],
             "value": [
-                start.strftime("%Y-%m-%d %H:%M:%S"),
-                end.strftime("%Y-%m-%d %H:%M:%S"),
+                0,
+                to_ms(start_dt),
+                to_ms(end_dt),
                 row["status"]
             ],
             "itemStyle": {
@@ -224,64 +224,83 @@ def status_timeline_chart():
             }
         })
 
-    options = {
+    render_item = JsCode("""
+    function(params, api) {
+
+        var categoryIndex = api.value(0);
+
+        var start = api.coord([
+            api.value(1),
+            categoryIndex
+        ]);
+
+        var end = api.coord([
+            api.value(2),
+            categoryIndex
+        ]);
+
+        var height =
+            api.size([0, 1])[1] * 0.6;
+
+        return {
+            type: 'rect',
+            shape: {
+                x: start[0],
+                y: start[1] - height / 2,
+                width: end[0] - start[0],
+                height: height
+            },
+            style: api.style()
+        };
+    }
+    """)
+
+    tooltip_formatter = JsCode("""
+    function(params){
+
+        return `
+            <b>${params.name}</b><br/>
+            Start : ${new Date(params.value[1]).toLocaleString()}<br/>
+            End : ${new Date(params.value[2]).toLocaleString()}
+        `;
+    }
+    """)
+
+    option = {
         "title": {
-            "text": "Machine Timeline",
-            "left": "center"
+            "text": " State Timeline"
         },
         "tooltip": {
-            "trigger": "item"
+            "trigger": "item",
+            "formatter": tooltip_formatter
+        },
+        "grid": {
+            "left": 120,
+            "right": 50,
+            "top": 50,
+            "bottom": 50
         },
         "xAxis": {
             "type": "time"
         },
         "yAxis": {
             "type": "category",
-            "data": ["MC1"]
+            "data": [device]
         },
         "series": [
             {
                 "type": "custom",
-                "renderItem": """
-                function(params, api) {
-
-                    var start = api.coord([
-                        api.value(0),
-                        0
-                    ]);
-
-                    var end = api.coord([
-                        api.value(1),
-                        0
-                    ]);
-
-                    var height =
-                        api.size([0,1])[1] * 0.6;
-
-                    return {
-                        type:'rect',
-                        shape:{
-                            x:start[0],
-                            y:start[1]-height/2,
-                            width:end[0]-start[0],
-                            height:height
-                        },
-                        style:api.style()
-                    };
-                }
-                """,
+                "renderItem": render_item,
                 "encode": {
-                    "x": [0, 1],
-                    "y": -1
+                    "x": [1, 2],
+                    "y": 0
                 },
                 "data": series_data
             }
         ]
     }
 
-    st_echarts(
-        options=options,
-        height="250px"
+    st_echarts(options=option,height="250px",key=f"timeline_{device}"
     )
 
 
@@ -346,137 +365,306 @@ if __name__ == "__main__":
 
 
 
--------------------------
-def to_ms(dt_string):
-    return int(
-        datetime.fromisoformat(dt_string).timestamp() * 1000
+# -------------------------
+# def to_ms(dt_string):
+#     return int(
+#         datetime.fromisoformat(dt_string).timestamp() * 1000
+#     )
+
+# # -----------------------------
+# # Transform
+# # -----------------------------
+# devices = response["devices"]
+# colors = response["status_color"]
+
+# device_index = {
+#     device: idx
+#     for idx, device in enumerate(devices)
+# }
+
+# series_data = []
+
+# for row in response["timeline"]:
+
+#     series_data.append({
+#         "name": row["status"],
+#         "value": [
+#             device_index[row["device"]],
+#             to_ms(row["start"]),
+#             to_ms(row["end"]),
+#             row["status"]
+#         ],
+#         "itemStyle": {
+#             "color": colors.get(
+#                 row["status"],
+#                 "#999999"
+#             )
+#         }
+#     })
+
+# # -----------------------------
+# # Custom Render
+# # -----------------------------
+# render_item = JsCode("""
+# function(params, api) {
+
+#     var categoryIndex = api.value(0);
+
+#     var start = api.coord([
+#         api.value(1),
+#         categoryIndex
+#     ]);
+
+#     var end = api.coord([
+#         api.value(2),
+#         categoryIndex
+#     ]);
+
+#     var height =
+#         api.size([0, 1])[1] * 0.6;
+
+#     return {
+#         type: 'rect',
+#         shape: {
+#             x: start[0],
+#             y: start[1] - height / 2,
+#             width: end[0] - start[0],
+#             height: height
+#         },
+#         style: api.style()
+#     };
+# }
+# """)
+
+# tooltip_formatter = JsCode("""
+# function(params){
+
+#     return `
+#         Status : ${params.name}<br/>
+#         Start : ${new Date(params.value[1]).toLocaleString()}<br/>
+#         End : ${new Date(params.value[2]).toLocaleString()}
+#     `;
+# }
+# """)
+
+# # -----------------------------
+# # ECharts Option
+# # -----------------------------
+# option = {
+#     "title": {
+#         "text": "Machine State Timeline"
+#     },
+#     "tooltip": {
+#         "trigger": "item",
+#         "formatter": tooltip_formatter
+#     },
+#     "grid": {
+#         "left": 120,
+#         "right": 50,
+#         "top": 50,
+#         "bottom": 50
+#     },
+#     "xAxis": {
+#         "type": "time"
+#     },
+#     "yAxis": {
+#         "type": "category",
+#         "data": devices
+#     },
+#     "series": [
+#         {
+#             "type": "custom",
+#             "renderItem": render_item,
+#             "encode": {
+#                 "x": [1, 2],
+#                 "y": 0
+#             },
+#             "data": series_data
+#         }
+#     ]
+# }
+
+# # -----------------------------
+# # UI
+# # -----------------------------
+# st.title("Machine Timeline")
+
+# st_echarts(
+#     options=option,
+#     height="500px"
+# )
+
+# st.divider()
+
+# st.subheader("Mock JSON")
+
+# st.json(response)
+
+
+
+
+
+import streamlit as st
+import requests
+from datetime import datetime, timedelta
+from streamlit_echarts import st_echarts, JsCode
+
+
+# -----------------------------
+# Request API
+# -----------------------------
+def request_timeline(mc):
+
+    url = f"http://127.0.0.1:8001/status/timeline/mc1"
+
+    res = requests.get(url, timeout=30)
+
+    res.raise_for_status()
+
+    return res.json()
+
+
+# -----------------------------
+# Create Chart
+# -----------------------------
+def create_timeline_chart(rows, device="MC1"):
+
+    color_map = {
+        "run": "#22c55e",
+        "stop": "#ef4444",
+        "alarm": "#f59e0b",
+        "unknown": "#64748b"
+    }
+
+    def to_ms(dt):
+        return int(dt.timestamp() * 1000)
+
+    series_data = []
+
+    for row in rows:
+
+        start_dt = datetime.fromisoformat(row["ts"])
+
+        end_dt = start_dt + timedelta(
+            seconds=row["duration"]
+        )
+
+        series_data.append({
+            "name": row["status"],
+            "value": [
+                0,
+                to_ms(start_dt),
+                to_ms(end_dt),
+                row["status"]
+            ],
+            "itemStyle": {
+                "color": color_map.get(
+                    row["status"],
+                    "#3b82f6"
+                )
+            }
+        })
+
+    render_item = JsCode("""
+    function(params, api) {
+
+        var categoryIndex = api.value(0);
+
+        var start = api.coord([
+            api.value(1),
+            categoryIndex
+        ]);
+
+        var end = api.coord([
+            api.value(2),
+            categoryIndex
+        ]);
+
+        var height =
+            api.size([0, 1])[1] * 0.6;
+
+        return {
+            type: 'rect',
+            shape: {
+                x: start[0],
+                y: start[1] - height / 2,
+                width: end[0] - start[0],
+                height: height
+            },
+            style: api.style()
+        };
+    }
+    """)
+
+    tooltip_formatter = JsCode("""
+    function(params){
+
+        return `
+            <b>${params.name}</b><br/>
+            Start : ${new Date(params.value[1]).toLocaleString()}<br/>
+            End : ${new Date(params.value[2]).toLocaleString()}
+        `;
+    }
+    """)
+
+    option = {
+        "title": {
+            "text": f"{device} State Timeline"
+        },
+        "tooltip": {
+            "trigger": "item",
+            "formatter": tooltip_formatter
+        },
+        "grid": {
+            "left": 120,
+            "right": 50,
+            "top": 50,
+            "bottom": 50
+        },
+        "xAxis": {
+            "type": "time"
+        },
+        "yAxis": {
+            "type": "category",
+            "data": [device]
+        },
+        "series": [
+            {
+                "type": "custom",
+                "renderItem": render_item,
+                "encode": {
+                    "x": [1, 2],
+                    "y": 0
+                },
+                "data": series_data
+            }
+        ]
+    }
+
+    st_echarts(options=option,height="250px",key=f"timeline_{device}"
     )
 
-# -----------------------------
-# Transform
-# -----------------------------
-devices = response["devices"]
-colors = response["status_color"]
-
-device_index = {
-    device: idx
-    for idx, device in enumerate(devices)
-}
-
-series_data = []
-
-for row in response["timeline"]:
-
-    series_data.append({
-        "name": row["status"],
-        "value": [
-            device_index[row["device"]],
-            to_ms(row["start"]),
-            to_ms(row["end"]),
-            row["status"]
-        ],
-        "itemStyle": {
-            "color": colors.get(
-                row["status"],
-                "#999999"
-            )
-        }
-    })
 
 # -----------------------------
-# Custom Render
+# Streamlit UI
 # -----------------------------
-render_item = JsCode("""
-function(params, api) {
+st.set_page_config(page_title="Machine Timeline", layout="wide")
 
-    var categoryIndex = api.value(0);
+st.title("🟢 Machine State Timeline")
 
-    var start = api.coord([
-        api.value(1),
-        categoryIndex
-    ]);
+mc = st.text_input("Machine ID", "mc1")
 
-    var end = api.coord([
-        api.value(2),
-        categoryIndex
-    ]);
+if st.button("Load Timeline"):
 
-    var height =
-        api.size([0, 1])[1] * 0.6;
+    rows = request_timeline(mc)
 
-    return {
-        type: 'rect',
-        shape: {
-            x: start[0],
-            y: start[1] - height / 2,
-            width: end[0] - start[0],
-            height: height
-        },
-        style: api.style()
-    };
-}
-""")
+    create_timeline_chart(
+        rows,
+        device=mc.upper()
+    )
 
-tooltip_formatter = JsCode("""
-function(params){
+    st.divider()
 
-    return `
-        Status : ${params.name}<br/>
-        Start : ${new Date(params.value[1]).toLocaleString()}<br/>
-        End : ${new Date(params.value[2]).toLocaleString()}
-    `;
-}
-""")
+    st.subheader("Raw Data")
 
-# -----------------------------
-# ECharts Option
-# -----------------------------
-option = {
-    "title": {
-        "text": "Machine State Timeline"
-    },
-    "tooltip": {
-        "trigger": "item",
-        "formatter": tooltip_formatter
-    },
-    "grid": {
-        "left": 120,
-        "right": 50,
-        "top": 50,
-        "bottom": 50
-    },
-    "xAxis": {
-        "type": "time"
-    },
-    "yAxis": {
-        "type": "category",
-        "data": devices
-    },
-    "series": [
-        {
-            "type": "custom",
-            "renderItem": render_item,
-            "encode": {
-                "x": [1, 2],
-                "y": 0
-            },
-            "data": series_data
-        }
-    ]
-}
-
-# -----------------------------
-# UI
-# -----------------------------
-st.title("Machine Timeline")
-
-st_echarts(
-    options=option,
-    height="500px"
-)
-
-st.divider()
-
-st.subheader("Mock JSON")
-
-st.json(response)
+    st.json(rows)

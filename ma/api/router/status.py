@@ -280,33 +280,163 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str):
 @router.get("/timeline/{mc}")
 def get_timeline_data(mc: str):
 
-    now = datetime.now()
-    if now.hour < 7:
-        start_date = (now - timedelta(days=1)).replace(hour=7, minute=0, second=0)
-    else:
-        start_date = now.replace(hour=7, minute=0, second=0)
+    # now = datetime.now()
+    # if now.hour < 7:
+    #     start_date = (now - timedelta(days=1)).replace(hour=7, minute=0, second=0)
+    # else:
+    #     start_date = now.replace(hour=7, minute=0, second=0)
     
-    start = start_date.strftime("%Y-%m-%d %H:%M:%S")
-    end = now.strftime("%Y-%m-%d %H:%M:%S")
+    # start = start_date.strftime("%Y-%m-%d %H:%M:%S")
+    # end = now.strftime("%Y-%m-%d %H:%M:%S")
 
-    query = """SELECT ts,shift,device_id,status FROM default.status_tb WHERE device_id = %(mc)s 
-    AND  ts BETWEEN %(start)s AND %(end)s ORDER BY ts ASC"""
+    # query = """SELECT ts,shift,device_id,status FROM default.status_tb WHERE device_id = %(mc)s 
+    # AND  ts BETWEEN %(start)s AND %(end)s ORDER BY ts ASC"""
+
+    # try:
+    #     params = {'mc': mc, 'start': start, 'end': end}
+    #     result = client.query(query, params)
+    #     df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
+
+    #     df_status = df_status.sort_values(['ts'])
+    #     df_status['next_ts'] = df_status['ts'].shift(-1)
+    #     df_status['next_ts'] = df_status['next_ts'].fillna(pd.to_datetime(end))
+
+    #     df_status['duration'] = ((df_status['next_ts'] - df_status['ts']).dt.total_seconds()).round(0)
+    #     df_status = df_status[['ts', 'status', 'duration']]
+    
+    #     if not df_status.empty:
+    #         return df_status.to_dict(orient="records")
+    #     else:
+    #         raise HTTPException(status_code=400, detail="Item not found")
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=str(e))
 
     try:
-        params = {'mc': mc, 'start': start, 'end': end}
-        result = client.query(query, params)
-        df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
 
-        df_status = df_status.sort_values(['ts'])
-        df_status['next_ts'] = df_status['ts'].shift(-1)
-        df_status['next_ts'] = df_status['next_ts'].fillna(pd.to_datetime(end))
+        now = datetime.now()
 
-        df_status['duration'] = ((df_status['next_ts'] - df_status['ts']).dt.total_seconds()).round(0)
-        df_status = df_status[['ts', 'status', 'duration']]
-    
-        if not df_status.empty:
-            return df_status.to_dict(orient="records")
+        # ----------------------------
+        # Shift Window
+        # ----------------------------
+        if now.hour < 7:
+            start_time = (now - timedelta(days=1)).replace(
+                hour=7,
+                minute=0,
+                second=0,
+                microsecond=0
+            )
         else:
-            raise HTTPException(status_code=400, detail="Item not found")
+            start_time = now.replace(
+                hour=7,
+                minute=0,
+                second=0,
+                microsecond=0
+            )
+
+        end_time = start_time + timedelta(days=1) - timedelta(seconds=1)
+
+        query_end = min(now, end_time)
+
+        query = """
+        SELECT
+            ts,
+            status
+        FROM default.status_tb
+        WHERE device_id = %(mc)s
+          AND ts BETWEEN %(start)s AND %(end)s
+        ORDER BY ts ASC
+        """
+
+        params = {
+            "mc": mc,
+            "start": start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "end": query_end.strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        result = client.query(query, params)
+
+        df = pd.DataFrame(
+            result.result_rows,
+            columns=result.column_names
+        )
+
+        # ----------------------------
+        # ไม่มีข้อมูลเลย
+        # ----------------------------
+        if df.empty:
+
+            return [{
+                "ts": start_time.isoformat(),
+                "status": "unknown",
+                "duration": int(
+                    (end_time - start_time).total_seconds()
+                )
+            }]
+
+        df["ts"] = pd.to_datetime(df["ts"])
+        df = df.sort_values("ts").reset_index(drop=True)
+
+        timeline = []
+
+        # ----------------------------
+        # unknown ก่อน event แรก
+        # ----------------------------
+        first_ts = df.iloc[0]["ts"]
+
+        if first_ts > start_time:
+
+            timeline.append({
+                "ts": start_time.isoformat(),
+                "status": "unknown",
+                "duration": int(
+                    (first_ts - start_time).total_seconds()
+                )
+            })
+
+        # ----------------------------
+        # event จริง
+        # ----------------------------
+        for i in range(len(df)):
+
+            current_ts = df.iloc[i]["ts"]
+            status = df.iloc[i]["status"]
+
+            if i < len(df) - 1:
+                next_ts = df.iloc[i + 1]["ts"]
+            else:
+                next_ts = query_end
+
+            duration = int(
+                (next_ts - current_ts).total_seconds()
+            )
+
+            if duration > 0:
+                timeline.append({
+                    "ts": current_ts.isoformat(),
+                    "status": status,
+                    "duration": duration
+                })
+
+        # ----------------------------
+        # unknown หลังเวลาปัจจุบัน
+        # ----------------------------
+        if query_end < end_time:
+
+            unknown_duration = int(
+                (end_time - query_end).total_seconds()
+            )
+
+            if unknown_duration > 0:
+                timeline.append({
+                    "ts": query_end.isoformat(),
+                    "status": "unknown",
+                    "duration": unknown_duration
+                })
+
+        return timeline
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
