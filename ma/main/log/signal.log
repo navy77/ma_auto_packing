@@ -19,3 +19,80 @@
 2026-06-24 22:38:43,916 - ERROR - Error Redis alarm: Attempt to execute concurrent queries within the same session.Please use a separate client instance per thread/process.
 2026-06-24 22:38:43,917 - ERROR - Error Redis alarm: Attempt to execute concurrent queries within the same session.Please use a separate client instance per thread/process.
 2026-06-25 00:04:00,257 - WARNING - Connected to MQTT Broker
+2026-06-25 07:44:12,917 - WARNING - Connected to MQTT Broker
+2026-06-25 07:50:06,084 - WARNING - [EXC: CONN LOST]
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\asyncio\proactor_events.py", line 286, in _loop_reading
+    length = fut.result()
+             ^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\asyncio\windows_events.py", line 803, in _poll
+    value = callback(transferred, key, ov)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\asyncio\windows_events.py", line 462, in finish_socket_func
+    return ov.getresult()
+           ^^^^^^^^^^^^^^
+ConnectionAbortedError: [WinError 1236] The network connection was aborted by the local system
+2026-06-25 07:50:06,130 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:50:12,137 - WARNING - [CAN'T RECONNECT] 1
+2026-06-25 07:50:12,137 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:50:18,158 - WARNING - Connected to MQTT Broker
+2026-06-25 07:50:59,502 - WARNING - [EXC: CONN LOST]
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\asyncio\proactor_events.py", line 286, in _loop_reading
+    length = fut.result()
+             ^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\asyncio\windows_events.py", line 803, in _poll
+    value = callback(transferred, key, ov)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\asyncio\windows_events.py", line 462, in finish_socket_func
+    return ov.getresult()
+           ^^^^^^^^^^^^^^
+ConnectionAbortedError: [WinError 1236] The network connection was aborted by the local system
+2026-06-25 07:50:59,502 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:05,509 - WARNING - [CAN'T RECONNECT] 1
+2026-06-25 07:51:05,509 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:11,523 - WARNING - [CAN'T RECONNECT] 2
+2026-06-25 07:51:11,523 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:17,535 - WARNING - [CAN'T RECONNECT] 3
+2026-06-25 07:51:17,535 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:22,506 - ERROR - Error check_device: Error 10051 connecting to 192.168.0.191:6379. A socket operation was attempted to an unreachable network.
+2026-06-25 07:51:23,537 - WARNING - [CAN'T RECONNECT] 4
+2026-06-25 07:51:23,537 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:29,550 - WARNING - [CAN'T RECONNECT] 5
+2026-06-25 07:51:29,550 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:35,561 - WARNING - [CAN'T RECONNECT] 6
+2026-06-25 07:51:35,561 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:41,571 - WARNING - [CAN'T RECONNECT] 7
+2026-06-25 07:51:41,571 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:47,581 - WARNING - [CAN'T RECONNECT] 8
+2026-06-25 07:51:47,581 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:53,587 - WARNING - [CAN'T RECONNECT] 9
+2026-06-25 07:51:53,588 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:51:59,592 - WARNING - [CAN'T RECONNECT] 10
+2026-06-25 07:51:59,592 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:05,595 - WARNING - [CAN'T RECONNECT] 11
+2026-06-25 07:52:05,595 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:11,608 - WARNING - [CAN'T RECONNECT] 12
+2026-06-25 07:52:11,609 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:17,616 - WARNING - [CAN'T RECONNECT] 13
+2026-06-25 07:52:17,616 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:23,625 - WARNING - [CAN'T RECONNECT] 14
+2026-06-25 07:52:23,625 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:26,271 - ERROR - Error check_device: Error 10051 connecting to 192.168.0.191:6379. A socket operation was attempted to an unreachable network.
+2026-06-25 07:52:29,638 - WARNING - [CAN'T RECONNECT] 15
+2026-06-25 07:52:29,638 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:35,643 - WARNING - [CAN'T RECONNECT] 16
+2026-06-25 07:52:35,643 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:41,655 - WARNING - [CAN'T RECONNECT] 17
+2026-06-25 07:52:41,655 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:47,658 - WARNING - [CAN'T RECONNECT] 18
+2026-06-25 07:52:47,659 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:53,659 - WARNING - [CAN'T RECONNECT] 19
+2026-06-25 07:52:53,661 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:52:59,664 - WARNING - [CAN'T RECONNECT] 20
+2026-06-25 07:52:59,664 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:53:05,679 - WARNING - [CAN'T RECONNECT] 21
+2026-06-25 07:53:05,679 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:53:11,682 - WARNING - [CAN'T RECONNECT] 22
+2026-06-25 07:53:11,682 - WARNING - [TRYING WRITE TO CLOSED SOCKET]
+2026-06-25 07:53:17,692 - WARNING - Connected to MQTT Broker
