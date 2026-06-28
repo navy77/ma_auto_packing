@@ -16,7 +16,7 @@ def get_current_status_by_mc(mc:str):
     try:
         result = client.query(query, {'mc': mc})
         rows = result.result_rows
-        
+
         if not rows:
             raise HTTPException(status_code=404, detail="Data not found")
 
@@ -280,37 +280,6 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str):
 @router.get("/timeline/{mc}")
 def get_timeline_data(mc: str):
 
-    # now = datetime.now()
-    # if now.hour < 7:
-    #     start_date = (now - timedelta(days=1)).replace(hour=7, minute=0, second=0)
-    # else:
-    #     start_date = now.replace(hour=7, minute=0, second=0)
-    
-    # start = start_date.strftime("%Y-%m-%d %H:%M:%S")
-    # end = now.strftime("%Y-%m-%d %H:%M:%S")
-
-    # query = """SELECT ts,shift,device_id,status FROM default.status_tb WHERE device_id = %(mc)s 
-    # AND  ts BETWEEN %(start)s AND %(end)s ORDER BY ts ASC"""
-
-    # try:
-    #     params = {'mc': mc, 'start': start, 'end': end}
-    #     result = client.query(query, params)
-    #     df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
-
-    #     df_status = df_status.sort_values(['ts'])
-    #     df_status['next_ts'] = df_status['ts'].shift(-1)
-    #     df_status['next_ts'] = df_status['next_ts'].fillna(pd.to_datetime(end))
-
-    #     df_status['duration'] = ((df_status['next_ts'] - df_status['ts']).dt.total_seconds()).round(0)
-    #     df_status = df_status[['ts', 'status', 'duration']]
-    
-    #     if not df_status.empty:
-    #         return df_status.to_dict(orient="records")
-    #     else:
-    #         raise HTTPException(status_code=400, detail="Item not found")
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e))
-
     try:
 
         now = datetime.now()
@@ -367,7 +336,7 @@ def get_timeline_data(mc: str):
 
             return [{
                 "ts": start_time.isoformat(),
-                "status": "unknown",
+                "status": "UNKNOWN",
                 "duration": int(
                     (end_time - start_time).total_seconds()
                 )
@@ -387,7 +356,7 @@ def get_timeline_data(mc: str):
 
             timeline.append({
                 "ts": start_time.isoformat(),
-                "status": "unknown",
+                "status": "UNKNOWN",
                 "duration": int(
                     (first_ts - start_time).total_seconds()
                 )
@@ -429,7 +398,7 @@ def get_timeline_data(mc: str):
             if unknown_duration > 0:
                 timeline.append({
                     "ts": query_end.isoformat(),
-                    "status": "unknown",
+                    "status": "UNKNOWN",
                     "duration": unknown_duration
                 })
 

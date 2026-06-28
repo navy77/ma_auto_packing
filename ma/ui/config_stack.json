@@ -1,0 +1,14 @@
+
+{
+    "title": {
+        "text": "Machine Operation Monthly",
+        "left": "center",
+        "top": "0%",
+        "textStyle": {"fontSize": 20, "fontWeight": "bold"}
+    },
+    "tooltip": {"trigger": "axis"},
+    "legend": {"bottom": "1%", "left": "center"},
+    "xAxis": {"type": "category"},
+    "yAxis": {"type": "value","name": "Daily Ratio"}
+ 
+}

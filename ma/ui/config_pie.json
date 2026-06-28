@@ -1,0 +1,38 @@
+{
+        "title": {
+            "text": "Machine Operation Ratio",
+            "left": "center",
+            "top": "0%",
+            "textStyle": {"fontSize": 20, "fontWeight": "bold"}
+        },
+         "tooltip": {
+            "trigger": "item",
+            "formatter": "{b}: {c}%" 
+        },
+        "label": {
+                    "show": true,           
+                    "position": "outside", 
+                    "formatter": "{b}: {c}%", 
+                    "fontSize": 14,
+                    "fontWeight": "bold"
+                },
+        "legend": {"bottom": "1%", "left": "center"},
+        "series": [
+            {
+                "name": "Status Ratio",
+                "type": "pie",
+                "radius": ["40%", "70%"],  
+                "padAngle": 5,             
+                "itemStyle": {
+                    "borderRadius": 10  
+                },
+                "emphasis": {
+                    "itemStyle": {
+                        "shadowBlur": 10,
+                        "shadowOffsetX": 0,
+                        "shadowColor": "rgba(0, 0, 0, 0.5)"
+                    }
+                }
+            }
+        ]
+    }

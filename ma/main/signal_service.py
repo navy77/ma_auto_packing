@@ -12,7 +12,11 @@ import clickhouse_connect
 class MqttToRedis:
     def __init__(self):
         dotenv.load_dotenv()
-        self.clickhouse_client = clickhouse_connect.get_client(host=os.environ["CLICKHOUSE_HOST"], port=int(os.environ["CLICKHOUSE_PORT"]), username=os.environ["CLICKHOUSE_USER"], password=os.environ["CLICKHOUSE_PASSWORD"])
+        # self.clickhouse_client = clickhouse_connect.get_client(host=os.environ["CLICKHOUSE_HOST"],
+        #                                                         port=int(os.environ["CLICKHOUSE_PORT"]),
+        #                                                           username=os.environ["CLICKHOUSE_USER"],
+        #                                                             password=os.environ["CLICKHOUSE_PASSWORD"],
+        #                                                             )
         self.redis_client = redis.Redis(host= os.environ["REDIS_HOST"], port=6379, decode_responses=True)
 
         self.client = MQTTClient(os.environ["DEVICE_CLIENT"])
@@ -32,6 +36,17 @@ class MqttToRedis:
         logging.basicConfig(
             filename='log/signal.log', level=logging.WARNING,
             format='%(asctime)s - %(levelname)s - %(message)s', force=True)
+        
+    def clickhouse_connect(self):
+        try:
+            clickhouse_client = clickhouse_connect.get_client(host=os.environ["CLICKHOUSE_HOST"],
+                                                                    port=int(os.environ["CLICKHOUSE_PORT"]),
+                                                                    username=os.environ["CLICKHOUSE_USER"],
+                                                                        password=os.environ["CLICKHOUSE_PASSWORD"],
+                                                                        )
+            return clickhouse_client
+        except Exception as e:
+            logging.error(f"Error clickhouse_connect: {e}")
 
     async def connect(self):
         await self.client.connect(self.mqtt_broker,self.mqtt_port)
@@ -219,22 +234,26 @@ class MqttToRedis:
 
     def insert_clickhouse_device(self,status,shift,device_id,broker,modbus,mac_id):
         data = [[status,shift, device_id, broker, modbus, mac_id]]
-        self.clickhouse_client.insert('device_tb', data, 
+        clickhouse_conn = self.clickhouse_connect()
+        clickhouse_conn.insert('device_tb', data, 
             column_names=['status','shift', 'device_id', 'broker', 'modbus', 'mac_id'])
         
     def insert_clickhouse_status(self,shift,device_id,status):
         data = [[shift, device_id, status]]
-        self.clickhouse_client.insert('status_raw_tb', data, 
+        clickhouse_conn = self.clickhouse_connect()
+        clickhouse_conn.insert('status_raw_tb', data, 
             column_names=['shift', 'device_id', 'status'])
         
     def insert_clickhouse_alarm(self,shift,device_id,status):
         data = [[shift, device_id, status]]
-        self.clickhouse_client.insert('alarm_raw_tb', data, 
+        clickhouse_conn = self.clickhouse_connect()
+        clickhouse_conn.insert('alarm_raw_tb', data, 
             column_names=['shift', 'device_id', 'status'])
         
     def insert_clickhouse_data(self,shift,device_id,data):
         data = [[shift, device_id, data]]
-        self.clickhouse_client.insert('data_tb', data, 
+        clickhouse_conn = self.clickhouse_connect()
+        clickhouse_conn.insert('data_tb', data, 
             column_names=['shift', 'device_id', 'data'])
         
     def work_shift(self,time_current):

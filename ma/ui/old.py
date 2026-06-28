@@ -6,25 +6,13 @@ import dotenv
 import streamlit as st
 from streamlit_option_menu import option_menu
 from datetime import datetime, timedelta
-import os
-import json
 
 st_autorefresh(interval=60000, key="datarefresh")
 chart_height = "300px"
 
-def config_pie():
-    with open("config_pie.json", "r", encoding="utf-8") as f:
-        options = json.load(f)
-    return options
-
-def config_stack():
-    with open("config_stack.json", "r", encoding="utf-8") as f:
-        options = json.load(f)
-    return options
-
 def status_ratio_data():
     try:
-        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-daily/mc1",timeout=5)
+        response = requests.get("http://127.0.0.1:8001/status/ratio-daily/mc1",timeout=5)
         if response.status_code == 200:
             raw_data = response.json()
 
@@ -36,14 +24,14 @@ def status_ratio_data():
 
 def status_ratio_monthly():
     try:
-        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-monthly/mc1", timeout=5)
+        response = requests.get("http://127.0.0.1:8001/status/ratio-monthly/mc1", timeout=5)
         if response.status_code == 200:
             json_response = response.json()
 
             raw_data = json_response.get("daily_data", [])
 
             dates = [item["date"] for item in raw_data]
-            series_data = {status: [] for status in status_mc}
+            series_data = {"run": [], "stop": [], "offline": [], "alarm": []}
 
             for item in raw_data:
                 details = item.get("details", [])
@@ -53,9 +41,9 @@ def status_ratio_monthly():
                     series_data[status].append(day_details.get(status, 0))
 
             return dates, series_data
-        empty_data = {status: [] for status in status_mc}
-        return [], empty_data
-    
+        
+        return [], {"run": [], "stop": [], "offline": [], "alarm": []}
+        
     except Exception as e:
         st.error(f"ไม่สามารถเชื่อมต่อ API ได้: {e}")
         return [], {"run": [], "stop": [], "offline": [], "alarm": []}
@@ -83,7 +71,8 @@ def status_shift_monthly(shift_name):
 
 def status_timeline():
     try:
-        response = requests.get(f"http://{api_host}:{api_port}/status/timeline/mc1", timeout=5)
+        response = requests.get("http://127.0.0.1:8001/status/timeline/mc1",timeout=5)
+
         if response.status_code == 200:
 
             return response.json()
@@ -92,38 +81,79 @@ def status_timeline():
         st.error(f"ไม่สามารถเชื่อมต่อ API ได้: {e}")
         return []
 
-
 def status_stacked_bar_chart():
-    dates, data = status_ratio_monthly()
-    order = status_mc
-    series = []
-    stack_option = config_stack()
-    stack_option["series"] = series
-    stack_option["xAxis"]["data"] = dates
-    stack_option["xAxis"]["data"] = dates
+    dates, series_data = status_ratio_monthly()
 
+    order = ["run", "stop",  "alarm", "offline"]
+    series = []
+    color_map = {"run": "#22c55e", "stop": "#f59e0b", "offline": "#64748b", "alarm": "#ef4444"}
+    
     for status in order:
-        values = data.get(status, [])
+        values = series_data.get(status, [])
         series.append({
-            "name": status,
+            "name": status.capitalize(),
             "type": "bar",
             "stack": "total", 
             "data": values,
-            "itemStyle": {"color": color_map.get(status, color_err)}
+            "itemStyle": {"color": color_map.get(status)}
         })
 
+    options = {
+        "title": {
+            "text": "Machine Operation Monthly",
+            "left": "center",
+            "top": "0%",
+            "textStyle": {"fontSize": 20, "fontWeight": "bold"}
+        },
+        "tooltip": {"trigger": "axis"},
+        "legend": {"data": ["Run", "Stop", "Alarm","Offline"]},
+        "xAxis": {"type": "category", "data": dates},
+        "yAxis": {"type": "value","name": "Daily Ratio"},
+        "series": series
+    }
     
-    st_echarts(options=stack_option, height= chart_height)
+    st_echarts(options=options, height= chart_height)
 
 def status_pie_chart():
     data = status_ratio_data()
-    pie_option = config_pie()
-    pie_option["series"][0]["data"] = data
+    color_map = {"run": "#22c55e", "stop": "#ef4444","offline": "#64748b","alarm": "#f59e0b"     }
 
-    for status in data:
-        status["itemStyle"] = {"color": color_map.get(status["name"], color_err)}
-    
-    st_echarts(options=pie_option, height=chart_height)
+    for item in data:
+        item["itemStyle"] = {"color": color_map.get(item["name"], "#3b82f6")}
+
+    options = {
+        "title": {
+            "text": "Machine Operation Ratio",
+            "left": "center",
+            "top": "0%",
+            "textStyle": {"fontSize": 20, "fontWeight": "bold"}
+        },
+        "tooltip": {
+            "trigger": "item",
+            "formatter": "{b}: {c}%" 
+        },
+        "legend": {"bottom": "1%", "left": "center"},
+        "series": [
+            {
+                "name": "Status Ratio",
+                "type": "pie",
+                "radius": ["40%", "70%"],  
+                "padAngle": 5,             
+                "itemStyle": {
+                    "borderRadius": 10  
+                },
+                "data": data,
+                "emphasis": {
+                    "itemStyle": {
+                        "shadowBlur": 10,
+                        "shadowOffsetX": 0,
+                        "shadowColor": "rgba(0, 0, 0, 0.5)",
+                    }
+                },
+            }
+        ],
+    }
+    st_echarts(options=options, height=chart_height)
 
 def status_shifts_chart():
 
@@ -158,31 +188,48 @@ def status_shifts_chart():
 
 def status_timeline_chart(device):
     data = status_timeline()
- 
-    # color_map = {"MC_RUN": "#22c55e","stop": "#ef4444","alarm": "#f59e0b","unknown": "#ced6e1","offline": "#64748b"}
-    shift_start = datetime.now().replace(hour=7,minute=0,second=0,microsecond=0
-)
+    color_map = {"run": "#22c55e", "stop": "#ef4444","offline": "#64748b","alarm": "#f59e0b"     }
+    color_map = {"run": "#22c55e","stop": "#ef4444","alarm": "#f59e0b","unknown": "#ced6e1","offline": "#64748b"}
+    shift_start = datetime.now().replace(
+        hour=7,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
 
     shift_end = shift_start + timedelta(days=1)
 
     x_min = int(shift_start.timestamp() * 1000)
     x_max = int(shift_end.timestamp() * 1000)
- 
 
     def to_ms(dt):
         return int(dt.timestamp() * 1000)
-    
-    series = []
+
+    series_data = []
+
     for row in data:
+
         start_dt = datetime.fromisoformat(row["ts"])
-        end_dt = start_dt + timedelta(seconds=row["duration"] )
 
-        series.append({
+        end_dt = start_dt + timedelta(
+            seconds=row["duration"]
+        )
+
+        series_data.append({
             "name": row["status"],
-            "value": [0, to_ms(start_dt),to_ms(end_dt),row["status"]],
-            "itemStyle": {"color": color_map.get(row["status"], color_err)}
+            "value": [
+                0,
+                to_ms(start_dt),
+                to_ms(end_dt),
+                row["status"]
+            ],
+            "itemStyle": {
+                "color": color_map.get(
+                    row["status"],
+                    "#3b82f6"
+                )
+            }
         })
-
 
     render_item = JsCode("""
     function(params, api) {
@@ -238,6 +285,7 @@ def status_timeline_chart(device):
             "formatter": tooltip_formatter
         },
         
+        # "xAxis": {"type": "time"},
         "xAxis": {
             "type": "time",
             "min": x_min,
@@ -260,7 +308,7 @@ def status_timeline_chart(device):
                     "x": [1, 2],
                     "y": 0
                 },
-                "data": series
+                "data": series_data
             }
         ]
     }
@@ -304,7 +352,8 @@ def main_layout():
             menu_icon="cast", 
             default_index=1
         )
-
+        st.markdown("---")
+        st.write("System Status: Operational")
 
 
     st.markdown("""<h1 style='text-align: center;'>MACHINE MONITORING DASHBOARD</h1>""", unsafe_allow_html=True)
@@ -325,23 +374,4 @@ def main_layout():
 if __name__ == "__main__":
     dotenv_file = dotenv.find_dotenv()
     dotenv.load_dotenv(dotenv_file,override=True)
-
-    api_host = os.environ['API_HOST']
-    api_port = int(os.environ['API_PORT'])
-    status_mc = os.environ['STATUS_LIST']
-    status_mc = [item.strip() for item in status_mc.split(',')]
-
-    color_err =  os.environ['COLOR_ERR']
-    color_values = [
-        os.environ["COLOR_1"],
-        os.environ["COLOR_2"],
-        os.environ["COLOR_3"],
-        os.environ["COLOR_4"],
-        os.environ["COLOR_UNKNOWN"]
-    ]
-
-    color_map = dict(zip(status_mc, color_values))
-    pie_chart_options = config_pie()
-    stack_chart_options = config_stack()
-
     main_layout()
