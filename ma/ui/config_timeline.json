@@ -1,0 +1,21 @@
+option = {
+        "title": {"text": "Machine Timeline", "left": "center"},
+        "tooltip": {"trigger": "item", "formatter": tooltip_formatter},
+        "xAxis": {
+            "type": "time",
+            # ลบ min และ max ออก เพื่อทดสอบว่าข้อมูลแสดงผลหรือไม่
+            "axisLabel": {"formatter": "{HH}:{mm}"}
+        },
+        "yAxis": {
+            "type": "category",
+            "data": [device]
+        },
+        "series": [
+            {
+                "type": "custom",
+                "renderItem": render_item, # ตรวจสอบว่าตัวแปรนี้มีค่าจริงๆ ไม่ใช่ None
+                "encode": {"x": [1, 2], "y": 0},
+                "data": series
+            }
+        ]
+    }

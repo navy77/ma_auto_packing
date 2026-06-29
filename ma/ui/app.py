@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import os
 import json
 
-st_autorefresh(interval= 2000, key="datarefresh")
+st_autorefresh(interval= 5000, key="datarefresh")
 chart_height = "300px"
 
 def config_pie():
@@ -132,38 +132,18 @@ def status_line_chart(device_id):
     dates_n, data_n = status_shift_monthly("N",device_id,status)
     dates_m, data_m = status_shift_monthly("M",device_id,status)
 
-    options = {
-        "title": {"text": "Running Comparison Shift M vs N ", "left": "center"},
-        "tooltip": {"trigger": "axis"},
-        "legend": {"data": ["Shift M", "Shift N"], "bottom": "5%"},
-        "xAxis": {"type": "category", "data": dates_n}, 
-        "yAxis": {"type": "value", "name": "Ratio (%)","min": 0,"max": 100,},
-
-        "series": [
-            {
-                "name": "Shift M",
-                "type": "line",
-                "data": data_m,
-                "smooth": True,
-                "itemStyle": {"color": "#3b82f6"} 
-            },
-            {
-                "name": "Shift N",
-                "type": "line",
-                "data": data_n,
-                "smooth": True,
-                "itemStyle": {"color": "#caef44"} 
-            }
-        ]
-    }
-    st_echarts(options=options, height=chart_height)
+    line_option = config_line()
+    line_option["xAxis"]["data"] = dates_n
+    line_option["series"][0]["data"] = data_m
+    line_option["series"][1]["data"] = data_n
+    
+    st_echarts(options=line_option, height=chart_height)
 
 def status_timeline_chart(device):
-    data = status_timeline("mc1")
+    data = status_timeline(device)
  
     # color_map = {"MC_RUN": "#22c55e","stop": "#ef4444","alarm": "#f59e0b","unknown": "#ced6e1","offline": "#64748b"}
-    shift_start = datetime.now().replace(hour=7,minute=0,second=0,microsecond=0
-)
+    shift_start = datetime.now().replace(hour=7,minute=0,second=0,microsecond=0)
 
     shift_end = shift_start + timedelta(days=1)
 
@@ -183,6 +163,7 @@ def status_timeline_chart(device):
             "name": row["status"],
             "value": [0, to_ms(start_dt),to_ms(end_dt),row["status"]],
             "itemStyle": {"color": color_map.get(row["status"], color_err)}
+
         })
 
 
@@ -264,7 +245,12 @@ def status_timeline_chart(device):
                 },
                 "data": series
             }
-        ]
+        ],
+        "legend": {
+            "data": color_map,
+            "bottom": "0%",
+            "orient": "horizontal"
+        },
     }
 
     st_echarts(options=option,height="300px")
@@ -273,6 +259,7 @@ def status_timeline_chart(device):
 def status():
     col1,col2 = st.columns([1,5])
     with col1:
+        global choice 
         choice = st.selectbox('Choose machine:', mc_list,key='mc_list')
 
     col1,col2 = st.columns([1,1],border=True)
@@ -281,7 +268,7 @@ def status():
             status_pie_chart(choice)
     with col2:
         with st.container():
-            status_timeline_chart("MC1")
+            status_timeline_chart(choice)
 
     col1,col2 = st.columns([1,1],border=True)
     with col1:
@@ -290,7 +277,7 @@ def status():
 
     with col2:
         with st.container():
-            status_line_chart("mc1")
+            status_line_chart(choice)
 
 def main_layout():
     st.set_page_config(
@@ -350,6 +337,6 @@ if __name__ == "__main__":
     color_map = dict(zip(status_mc, color_values))
     pie_chart_options = config_pie()
     stack_chart_options = config_stack()
-    # line_chart_options = config_line()
+    line_chart_options = config_line()
 
     main_layout()

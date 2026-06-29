@@ -1,0 +1,14 @@
+version: '3'
+services:
+  mms_api:
+    image: mic/mms_ui:1.0.0
+    container_name: mms_ui
+    environment:
+      - TZ=Asia/Bangkok
+    privileged: true
+    ports:
+    - 8501:8501
+    volumes:
+      - ./.env:/app/.env
+    restart: always
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
