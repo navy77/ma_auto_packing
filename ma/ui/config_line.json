@@ -1,0 +1,16 @@
+
+{
+    "title": {
+        "text": "Running Comparison Shift M vs N ",
+        "left": "center",
+        "top": "0%",
+        "textStyle": {"fontSize": 20, "fontWeight": "bold"}
+    },
+    "tooltip": {"trigger": "axis"},
+    "legend": {"data": ["Shift M", "Shift N"], "bottom": "1%"},
+    "xAxis": {"type": "category"}, 
+    "yAxis": {"type": "value", "name": "Run Ratio (%)","min": 0,"max": 100}
+
+}
+
+

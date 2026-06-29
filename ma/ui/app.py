@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import os
 import json
 
-st_autorefresh(interval=60000, key="datarefresh")
+st_autorefresh(interval= 2000, key="datarefresh")
 chart_height = "300px"
 
 def config_pie():
@@ -22,9 +22,15 @@ def config_stack():
         options = json.load(f)
     return options
 
-def status_ratio_data():
+def config_line():
+    with open("config_line.json", "r", encoding="utf-8") as f:
+        options = json.load(f)
+    return options
+
+
+def status_ratio_data(device_id):
     try:
-        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-daily/mc1",timeout=5)
+        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-daily/{device_id}",timeout=5)
         if response.status_code == 200:
             raw_data = response.json()
 
@@ -34,9 +40,9 @@ def status_ratio_data():
         st.error(f"ไม่สามารถเชื่อมต่อ API ได้: {e}")
         return []
 
-def status_ratio_monthly():
+def status_ratio_monthly(device_id):
     try:
-        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-monthly/mc1", timeout=5)
+        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-monthly/{device_id}", timeout=5)
         if response.status_code == 200:
             json_response = response.json()
 
@@ -60,30 +66,27 @@ def status_ratio_monthly():
         st.error(f"ไม่สามารถเชื่อมต่อ API ได้: {e}")
         return [], {"run": [], "stop": [], "offline": [], "alarm": []}
 
-def status_shift_monthly(shift_name):
+def status_shift_monthly(shift_name,device_id,status):
     try:
-        url = f"http://127.0.0.1:8001/status/ratio-monthly/mc1/{shift_name}"
-        response = requests.get(url, timeout=5)
+        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-monthly/{device_id}/{shift_name}", timeout=5)
         if response.status_code == 200:
             raw_data = response.json().get("daily_data", [])
-            
-            # เก็บเฉพาะค่า ratio ของ status == "run"
-            run_ratios = []
+
+            ratios = []
             dates = []
             for item in raw_data:
                 dates.append(item["date"])
-                # หาค่า ratio ของสถานะ run ถ้าไม่มีให้เป็น 0
-                run_val = next((d["ratio"] for d in item.get("details", []) if d["status"] == "run"), 0)
-                run_ratios.append(run_val)
-            
-            return dates, run_ratios
+                run_val = next((d["ratio"] for d in item.get("details", []) if d["status"] == status), 0)
+                ratios.append(run_val)
+            return dates, ratios
+
     except Exception as e:
         st.error(f"Error shift {shift_name}: {e}")
     return [], []
 
-def status_timeline():
+def status_timeline(device_id):
     try:
-        response = requests.get(f"http://{api_host}:{api_port}/status/timeline/mc1", timeout=5)
+        response = requests.get(f"http://{api_host}:{api_port}/status/timeline/{device_id}", timeout=5)
         if response.status_code == 200:
 
             return response.json()
@@ -92,14 +95,12 @@ def status_timeline():
         st.error(f"ไม่สามารถเชื่อมต่อ API ได้: {e}")
         return []
 
-
-def status_stacked_bar_chart():
-    dates, data = status_ratio_monthly()
+def status_stacked_bar_chart(device_id):
+    dates, data = status_ratio_monthly(device_id)
     order = status_mc
     series = []
     stack_option = config_stack()
     stack_option["series"] = series
-    stack_option["xAxis"]["data"] = dates
     stack_option["xAxis"]["data"] = dates
 
     for status in order:
@@ -115,8 +116,8 @@ def status_stacked_bar_chart():
     
     st_echarts(options=stack_option, height= chart_height)
 
-def status_pie_chart():
-    data = status_ratio_data()
+def status_pie_chart(device_id):
+    data = status_ratio_data(device_id)
     pie_option = config_pie()
     pie_option["series"][0]["data"] = data
 
@@ -125,17 +126,18 @@ def status_pie_chart():
     
     st_echarts(options=pie_option, height=chart_height)
 
-def status_shifts_chart():
+def status_line_chart(device_id):
+    status = st.selectbox('Choose machine:', status_mc ,key='status_list')
 
-    dates_n, data_n = status_shift_monthly("N")
-    dates_m, data_m = status_shift_monthly("M")
-    
+    dates_n, data_n = status_shift_monthly("N",device_id,status)
+    dates_m, data_m = status_shift_monthly("M",device_id,status)
+
     options = {
         "title": {"text": "Running Comparison Shift M vs N ", "left": "center"},
         "tooltip": {"trigger": "axis"},
         "legend": {"data": ["Shift M", "Shift N"], "bottom": "5%"},
         "xAxis": {"type": "category", "data": dates_n}, 
-        "yAxis": {"type": "value", "name": "Run Ratio (%)","min": 0,"max": 100,},
+        "yAxis": {"type": "value", "name": "Ratio (%)","min": 0,"max": 100,},
 
         "series": [
             {
@@ -143,21 +145,21 @@ def status_shifts_chart():
                 "type": "line",
                 "data": data_m,
                 "smooth": True,
-                "itemStyle": {"color": "#3b82f6"} # สีน้ำเงิน
+                "itemStyle": {"color": "#3b82f6"} 
             },
             {
                 "name": "Shift N",
                 "type": "line",
                 "data": data_n,
                 "smooth": True,
-                "itemStyle": {"color": "#caef44"} # สีแดง
+                "itemStyle": {"color": "#caef44"} 
             }
         ]
     }
     st_echarts(options=options, height=chart_height)
 
 def status_timeline_chart(device):
-    data = status_timeline()
+    data = status_timeline("mc1")
  
     # color_map = {"MC_RUN": "#22c55e","stop": "#ef4444","alarm": "#f59e0b","unknown": "#ced6e1","offline": "#64748b"}
     shift_start = datetime.now().replace(hour=7,minute=0,second=0,microsecond=0
@@ -269,24 +271,26 @@ def status_timeline_chart(device):
 
 
 def status():
+    col1,col2 = st.columns([1,5])
+    with col1:
+        choice = st.selectbox('Choose machine:', mc_list,key='mc_list')
+
     col1,col2 = st.columns([1,1],border=True)
     with col1:
         with st.container():
-            status_pie_chart()
+            status_pie_chart(choice)
     with col2:
         with st.container():
             status_timeline_chart("MC1")
-            # pass
 
     col1,col2 = st.columns([1,1],border=True)
     with col1:
         with st.container():
-            status_stacked_bar_chart()
+            status_stacked_bar_chart(choice)
 
     with col2:
         with st.container():
-            status_shifts_chart()
-
+            status_line_chart("mc1")
 
 def main_layout():
     st.set_page_config(
@@ -317,7 +321,6 @@ def main_layout():
         st.subheader("Machine Status")
         status()
 
-
     elif selected == "MC Alarm":
         st.subheader("Machine Alarm")
 
@@ -328,6 +331,10 @@ if __name__ == "__main__":
 
     api_host = os.environ['API_HOST']
     api_port = int(os.environ['API_PORT'])
+
+    mc_list = os.environ['MC_LIST']
+    mc_list = [item.strip() for item in mc_list.split(',')]
+
     status_mc = os.environ['STATUS_LIST']
     status_mc = [item.strip() for item in status_mc.split(',')]
 
@@ -343,5 +350,6 @@ if __name__ == "__main__":
     color_map = dict(zip(status_mc, color_values))
     pie_chart_options = config_pie()
     stack_chart_options = config_stack()
+    # line_chart_options = config_line()
 
     main_layout()

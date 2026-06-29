@@ -61,7 +61,7 @@ class ScheduleData:
                 df['ts'] = pd.to_datetime(df['ts'], utc=True)
                 df['ts'] = df['ts'].dt.tz_convert('Asia/Bangkok')
                 df['ts'] = df['ts'].dt.tz_localize(None)
-
+                df = df[df['status'] != 0]
                 self.clickhouse_client.insert_df(table='status_tb',df=df)
 
                 # write 
@@ -117,7 +117,7 @@ class ScheduleData:
                 df['ts'] = pd.to_datetime(df['ts'], utc=True)
                 df['ts'] = df['ts'].dt.tz_convert('Asia/Bangkok')
                 df['ts'] = df['ts'].dt.tz_localize(None)
-                
+                df = df[df['status'] != 0]
                 self.clickhouse_client.insert_df(table='alarm_tb',df=df)
 
                 # write 

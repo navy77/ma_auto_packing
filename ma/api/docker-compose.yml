@@ -1,0 +1,13 @@
+version: '3'
+services:
+  mms_api:
+    image: mic/mms_api:1.0.0
+    container_name: mms_api
+    environment:
+      - TZ=Asia/Bangkok
+    privileged: true
+    ports:
+    - 8001:8001
+    volumes:
+      - ./.env:/app/.env
+    restart: always

@@ -1,0 +1,1 @@
+docker build --no-cache -t mic/mms_api:1.0.0 . 

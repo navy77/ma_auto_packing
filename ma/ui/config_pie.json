@@ -13,8 +13,8 @@
                     "show": true,           
                     "position": "outside", 
                     "formatter": "{b}: {c}%", 
-                    "fontSize": 14,
-                    "fontWeight": "bold"
+                    "fontSize": 14
+
                 },
         "legend": {"bottom": "1%", "left": "center"},
         "series": [
