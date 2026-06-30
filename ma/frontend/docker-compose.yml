@@ -1,0 +1,14 @@
+version: '3'
+services:
+  mms_frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mic/mms_frontend:1.0.0
+    container_name: mms_frontend
+    environment:
+      - TZ=Asia/Bangkok
+    privileged: true
+    ports:
+      - "5173:5173"
+    restart: always

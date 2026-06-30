@@ -7,7 +7,7 @@ services:
       - TZ=Asia/Bangkok
     privileged: true
     ports:
-    - 8001:8001
+      - 8001:8001
     volumes:
       - ./.env:/app/.env
     restart: always

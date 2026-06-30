@@ -11,12 +11,13 @@
     MC_WAIT: '#f1c40f',
     MC_ALARM: '#f39c12',
     MC_STOP: '#e74c3c',
-    'NO DATA': '#77716f'
+    OFFLINE: '#999999',
+    NO_DATA: '#757575'
   };
 
   // State options
   const machines = ['box_assy', 'palletizing'];
-  const statuses = ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP'];
+  const statuses = ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP', 'OFFLINE','NO_DATA'];
 
   // Reactive state
   let selectedMachine = $state('box_assy');
@@ -50,22 +51,61 @@
       
       // 1. Fetch Pie Chart Data
       const resPie = await fetch(`http://localhost:8001/status/ratio-daily/${mc}`);
-      const pieJson = resPie.ok ? await resPie.json() : [];
+      const pieRaw = resPie.ok ? await resPie.json() : [];
+      const pieJson = pieRaw.map((item: any) => ({
+        ...item,
+        status: item.status === 'NO DATA' ? 'NO_DATA' : item.status
+      }));
 
       // 2. Fetch Timeline Chart Data
       const resTimeline = await fetch(`http://localhost:8001/status/timeline/${mc}`);
-      const timelineJson = resTimeline.ok ? await resTimeline.json() : [];
+      const timelineRaw = resTimeline.ok ? await resTimeline.json() : [];
+      const timelineJson = timelineRaw.map((item: any) => ({
+        ...item,
+        status: item.status === 'NO DATA' ? 'NO_DATA' : item.status
+      }));
 
       // 3. Fetch Monthly Stacked Bar Data
       const resMonthly = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}`);
-      const monthlyJson = resMonthly.ok ? await resMonthly.json() : { daily_data: [] };
+      const monthlyRaw = resMonthly.ok ? await resMonthly.json() : { daily_data: [] };
+      const monthlyJson = {
+        ...monthlyRaw,
+        daily_data: (monthlyRaw.daily_data || []).map((day: any) => ({
+          ...day,
+          details: (day.details || []).map((det: any) => ({
+            ...det,
+            status: det.status === 'NO DATA' ? 'NO_DATA' : det.status
+          }))
+        }))
+      };
 
       // 4. Fetch Monthly Shift Comparison Data for Selected Status
-      const resM = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}/M/${status}`);
-      const mJson = resM.ok ? await resM.json() : { daily_data: [] };
+      const statusForApi = status === 'NO_DATA' ? 'NO DATA' : status;
+      const resM = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}/M/${statusForApi}`);
+      const mRaw = resM.ok ? await resM.json() : { daily_data: [] };
+      const mJson = {
+        ...mRaw,
+        daily_data: (mRaw.daily_data || []).map((day: any) => ({
+          ...day,
+          details: (day.details || []).map((det: any) => ({
+            ...det,
+            status: det.status === 'NO DATA' ? 'NO_DATA' : det.status
+          }))
+        }))
+      };
 
-      const resN = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}/N/${status}`);
-      const nJson = resN.ok ? await resN.json() : { daily_data: [] };
+      const resN = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}/N/${statusForApi}`);
+      const nRaw = resN.ok ? await resN.json() : { daily_data: [] };
+      const nJson = {
+        ...nRaw,
+        daily_data: (nRaw.daily_data || []).map((day: any) => ({
+          ...day,
+          details: (day.details || []).map((det: any) => ({
+            ...det,
+            status: det.status === 'NO DATA' ? 'NO_DATA' : det.status
+          }))
+        }))
+      };
 
       // Update state reactively
       pieData = pieJson;
@@ -107,7 +147,7 @@
     legend: {
       bottom: '0%',
       left: 'center',
-      data: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP'],
+      data: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP','OFFLINE','NO_DATA'],
       textStyle: { color: '#888' }
     },
     series: [
@@ -137,7 +177,7 @@
         data: pieData.map(item => ({
           name: item.status,
           value: item.ratio,
-          itemStyle: { color: colors[item.status] || '#95a5a6' }
+          itemStyle: { color: colors[item.status] || '#757575' }
         }))
       }
     ]
@@ -212,7 +252,7 @@
     legend: {
       bottom: '0%',
       left: 'center',
-      data: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP'],
+      data: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP', 'OFFLINE', 'NO_DATA'],
       textStyle: { color: '#888' }
     },
     series: [
@@ -227,12 +267,12 @@
             name: row.status,
             value: [0, startDt.getTime(), endDt.getTime(), row.status],
             itemStyle: {
-              color: colors[row.status] || '#77716f'
+              color: colors[row.status] || '#757575'
             }
           };
         })
       },
-      ...['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP'].map(status => ({
+      ...['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP', 'OFFLINE', 'NO_DATA'].map(status => ({
         name: status,
         type: 'bar',
         data: [],
@@ -250,7 +290,7 @@
     legend: {
       bottom: '0%',
       left: 'center',
-      data: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP'],
+      data: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP', 'OFFLINE', 'NO_DATA'],
       textStyle: { color: '#888' }
     },
     grid: {
@@ -269,7 +309,7 @@
       min: 0,
       max: 100
     },
-    series: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP', 'NO DATA'].map(status => ({
+    series: ['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP', 'OFFLINE', 'NO_DATA'].map(status => ({
       name: status,
       type: 'bar',
       stack: 'total',
@@ -278,7 +318,7 @@
         const detail = d.details?.find((det: any) => det.status === status);
         return detail ? detail.ratio : 0;
       }),
-      itemStyle: { color: colors[status] || '#77716f' }
+      itemStyle: { color: colors[status] || '#757575' }
     }))
   } as any);
 
@@ -290,7 +330,7 @@
     legend: {
       bottom: '0%',
       left: 'center',
-      data: ['Shift M', 'Shift N', 'MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP'],
+      data: ['Shift M', 'Shift N'],
       textStyle: { color: '#888' }
     },
     grid: {
@@ -327,7 +367,7 @@
         itemStyle: { color: '#f59e0b' },
         lineStyle: { width: 3 }
       },
-      ...['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP'].map(status => ({
+      ...['MC_RUN', 'MC_WAIT', 'MC_ALARM', 'MC_STOP', 'OFFLINE', 'NO_DATA'].map(status => ({
         name: status,
         type: 'line',
         data: [],

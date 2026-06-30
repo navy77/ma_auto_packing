@@ -1,3 +1,5 @@
+docker build --no-cache -t mic/mms_frontend:1.0.0 . 
+
 # sv
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
