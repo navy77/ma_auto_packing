@@ -68,16 +68,19 @@ def status_ratio_monthly(device_id):
 
 def status_shift_monthly(shift_name,device_id,status):
     try:
-        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-monthly/{device_id}/{shift_name}", timeout=5)
+        response = requests.get(f"http://{api_host}:{api_port}/status/ratio-monthly/{device_id}/{shift_name}/{status}", timeout=5)
         if response.status_code == 200:
             raw_data = response.json().get("daily_data", [])
-
             ratios = []
             dates = []
             for item in raw_data:
                 dates.append(item["date"])
-                run_val = next((d["ratio"] for d in item.get("details", []) if d["status"] == status), 0)
-                ratios.append(run_val)
+                details = item.get("details", [])
+
+                if details:
+                    ratios.append(details[0]["ratio"])
+                else:
+                    ratios.append(0)
             return dates, ratios
 
     except Exception as e:
@@ -127,7 +130,7 @@ def status_pie_chart(device_id):
     st_echarts(options=pie_option, height=chart_height)
 
 def status_line_chart(device_id):
-    status = st.selectbox('Choose machine:', status_mc ,key='status_list')
+    status = st.selectbox('Choose status:', status_mc ,key='status_list')
 
     dates_n, data_n = status_shift_monthly("N",device_id,status)
     dates_m, data_m = status_shift_monthly("M",device_id,status)
@@ -142,7 +145,6 @@ def status_line_chart(device_id):
 def status_timeline_chart(device):
     data = status_timeline(device)
  
-    # color_map = {"MC_RUN": "#22c55e","stop": "#ef4444","alarm": "#f59e0b","unknown": "#ced6e1","offline": "#64748b"}
     shift_start = datetime.now().replace(hour=7,minute=0,second=0,microsecond=0)
 
     shift_end = shift_start + timedelta(days=1)
@@ -165,7 +167,6 @@ def status_timeline_chart(device):
             "itemStyle": {"color": color_map.get(row["status"], color_err)}
 
         })
-
 
     render_item = JsCode("""
     function(params, api) {
@@ -266,14 +267,17 @@ def status():
     with col1:
         with st.container():
             status_pie_chart(choice)
+            # pass
     with col2:
         with st.container():
             status_timeline_chart(choice)
+            # pass 
 
     col1,col2 = st.columns([1,1],border=True)
     with col1:
         with st.container():
             status_stacked_bar_chart(choice)
+            # pass
 
     with col2:
         with st.container():
@@ -297,12 +301,10 @@ def main_layout():
         )
 
 
-
     st.markdown("""<h1 style='text-align: center;'>MACHINE MONITORING DASHBOARD</h1>""", unsafe_allow_html=True)
 
     if selected == "Home":
         st.subheader("Production Result")
-
 
     elif selected == "MC Status":
         st.subheader("Machine Status")
@@ -335,6 +337,7 @@ if __name__ == "__main__":
     ]
 
     color_map = dict(zip(status_mc, color_values))
+
     pie_chart_options = config_pie()
     stack_chart_options = config_stack()
     line_chart_options = config_line()

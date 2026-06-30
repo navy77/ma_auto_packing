@@ -21549,3 +21549,45 @@ To fix this, use `chmod 0700 /mosquitto/data//mosquitto.db.new`.
 1782342500: Config loaded from /mosquitto/config/mosquitto.conf.
 1782342500: Opening ipv4 listen socket on port 1883.
 1782342500: mosquitto version 2.0.22 running
+1782781784: mosquitto version 2.0.20 starting
+1782781784: Config loaded from /mosquitto/config/mosquitto.conf.
+1782781784: Opening ipv4 listen socket on port 1883.
+1782781784: mosquitto version 2.0.20 running
+1782781786: New connection from 172.27.0.1:57498 on port 1883.
+1782781786: New client connected from 172.27.0.1:57498 as device_service (p5, c1, k60).
+1782782283: Client device_service closed its connection.
+1782782355: New connection from 172.27.0.1:38418 on port 1883.
+1782782355: New client connected from 172.27.0.1:38418 as nodered_f9682ce064a4261e (p2, c1, k60).
+1782783523: New connection from 172.27.0.1:53012 on port 1883.
+1782783523: New client connected from 172.27.0.1:53012 as device_service (p5, c1, k60).
+1782783585: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782784787: Client device_service closed its connection.
+1782785386: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782785606: New connection from 172.27.0.1:40956 on port 1883.
+1782785606: New client connected from 172.27.0.1:40956 as device_service (p5, c1, k60).
+1782785676: Client device_service closed its connection.
+1782786418: New connection from 172.27.0.1:49534 on port 1883.
+1782786418: New client connected from 172.27.0.1:49534 as mqtt-explorer-34a50344 (p2, c1, k60).
+1782786688: New connection from 172.27.0.1:43344 on port 1883.
+1782786688: New client connected from 172.27.0.1:43344 as device_service (p5, c1, k60).
+1782786691: Client device_service closed its connection.
+1782786694: New connection from 172.27.0.1:55152 on port 1883.
+1782786694: New client connected from 172.27.0.1:55152 as device_service (p5, c1, k60).
+1782787187: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782787203: Client device_service closed its connection.
+1782787204: New connection from 172.27.0.1:53162 on port 1883.
+1782787204: New client connected from 172.27.0.1:53162 as device_service (p5, c1, k60).
+1782788988: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782790789: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782792590: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782794391: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782796192: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782797993: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782799794: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782801595: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782803396: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782805197: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782806998: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782808799: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782810600: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1782812401: Saving in-memory database to /mosquitto/data//mosquitto.db.

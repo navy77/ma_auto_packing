@@ -4,12 +4,10 @@ import dotenv
 import redis
 from datetime import datetime
 import pandas as pd
-from zoneinfo import ZoneInfo
+
 class ScheduleData:
     def __init__(self):
         dotenv.load_dotenv()
-        
-        self.clickhouse_client = clickhouse_connect.get_client(host=os.environ["CLICKHOUSE_HOST"], port=int(os.environ["CLICKHOUSE_PORT"]), username=os.environ["CLICKHOUSE_USER"], password=os.environ["CLICKHOUSE_PASSWORD"])
         self.redis_client = redis.Redis(host= os.environ["REDIS_HOST"], port=6379, decode_responses=True)
         self.device_list = os.environ["DEVICE_LIST"].split(',')
 
@@ -20,6 +18,17 @@ class ScheduleData:
     def main(self):
         self.check_status() 
         self.check_alarm()
+
+    def clickhouse_connect(self):
+        try:
+            clickhouse_client = clickhouse_connect.get_client(host=os.environ["CLICKHOUSE_HOST"],
+                                                                    port=int(os.environ["CLICKHOUSE_PORT"]),
+                                                                    username=os.environ["CLICKHOUSE_USER"],
+                                                                        password=os.environ["CLICKHOUSE_PASSWORD"],
+                                                                        )
+            return clickhouse_client
+        except Exception as e:
+            logging.error(f"Error clickhouse_connect: {e}")
 
     def check_status(self):
         try:
@@ -44,7 +53,8 @@ class ScheduleData:
                 query = 'SELECT * FROM default.status_raw_tb WHERE created_at > %(start)s AND created_at < %(end)s'
                 parameters = {'start': last_checked, 'end': now}
 
-            result = self.clickhouse_client.query(query, parameters=parameters)
+            clickhouse_conn = self.clickhouse_connect()
+            result = clickhouse_conn.query(query, parameters=parameters)
             df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
 
             if not df_status.empty:
@@ -62,15 +72,16 @@ class ScheduleData:
                 df['ts'] = df['ts'].dt.tz_convert('Asia/Bangkok')
                 df['ts'] = df['ts'].dt.tz_localize(None)
                 df = df[df['status'] != 0]
-                self.clickhouse_client.insert_df(table='status_tb',df=df)
+
+                clickhouse_conn = self.clickhouse_connect()
+                clickhouse_conn.insert_df(table='status_tb',df=df)
 
                 # write 
                 data["time_status"] = now
                 with open("time.json", "w") as f:
                     json.dump(data, f)
 
-
-                print("check_status success")
+                print(f"{now}|check_status success")
                 logging.warning("check_status success")
 
         except Exception as e:
@@ -92,7 +103,6 @@ class ScheduleData:
                 data = json.load(f)
             last_checked = data["time_alarm"]
 
-
             if last_checked =="":
                 query = 'SELECT * FROM default.alarm_raw_tb WHERE created_at < %(end)s'
                 parameters = {'end': now}
@@ -100,7 +110,8 @@ class ScheduleData:
                 query = 'SELECT * FROM default.alarm_raw_tb WHERE created_at > %(start)s AND created_at < %(end)s'
                 parameters = {'start': last_checked, 'end': now}
 
-            result = self.clickhouse_client.query(query, parameters=parameters)
+            clickhouse_conn = self.clickhouse_connect()
+            result = clickhouse_conn.query(query, parameters=parameters)
             df_status = pd.DataFrame(result.result_rows, columns=result.column_names)
 
             if not df_status.empty:
@@ -118,14 +129,16 @@ class ScheduleData:
                 df['ts'] = df['ts'].dt.tz_convert('Asia/Bangkok')
                 df['ts'] = df['ts'].dt.tz_localize(None)
                 df = df[df['status'] != 0]
-                self.clickhouse_client.insert_df(table='alarm_tb',df=df)
+
+                clickhouse_conn = self.clickhouse_connect()
+                clickhouse_conn.insert_df(table='alarm_tb',df=df)
 
                 # write 
                 data["time_alarm"] = now
                 with open("time.json", "w") as f:
                     json.dump(data, f)
 
-                print("check_alarm success")
+                print(f"{now}|check_alarm success")
                 logging.warning("check_alarm success")
         
         except Exception as e:
