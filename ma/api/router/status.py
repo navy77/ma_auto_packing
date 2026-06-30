@@ -1,8 +1,6 @@
 from fastapi import APIRouter,HTTPException
-from database import client
+from database import get_db_client
 from datetime import datetime, timedelta
-from collections import defaultdict
-from datetime import datetime
 import pandas as pd 
 import calendar
 
@@ -11,6 +9,7 @@ router = APIRouter()
 # get current status 
 @router.get("/current/{mc}")
 def get_current_status_by_mc(mc:str):
+    client = get_db_client()
     query = """SELECT ts,shift,device_id,status FROM default.status_tb  
     WHERE device_id = %(mc)s ORDER BY ts DESC LIMIT 1"""
     try:
@@ -25,10 +24,13 @@ def get_current_status_by_mc(mc:str):
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
     
 # get status ratio daily
 @router.get("/ratio-daily/{mc}")
 def get_status_ratio_daily_by_mc(mc:str):
+    client = get_db_client()
     now = datetime.now()
     if now.hour < 7:
         start_date = (now - timedelta(days=1)).replace(hour=7, minute=0, second=0)
@@ -82,13 +84,13 @@ def get_status_ratio_daily_by_mc(mc:str):
             df['next_ts'] = df['ts'].shift(-1)
             df['next_ts'] = df['next_ts'].fillna(pd.to_datetime(end))
 
-            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds()).round(0)
+            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds()).round(1)
             df = df.groupby(['status'])['duration'].sum().reset_index()
             
             # find ratio %
             df = df.groupby(['status'])['duration'].sum().reset_index()
             total_duration = df['duration'].sum()
-            df['ratio'] = ((df['duration'] / total_duration) * 100).round(0)
+            df['ratio'] = ((df['duration'] / total_duration) * 100).round(1)
 
             df['status'] = df['status'].str.upper()
 
@@ -96,10 +98,13 @@ def get_status_ratio_daily_by_mc(mc:str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
 
 # get status ratio monthly
 @router.get("/ratio-monthly/{mc}")
 def get_status_ratio_monthly_by_mc(mc: str):
+    client = get_db_client()
     result_data = []
     # find end month
     year = datetime.now().year
@@ -160,7 +165,7 @@ def get_status_ratio_monthly_by_mc(mc: str):
 
             df['date_shift'] = (df['ts'] - timedelta(hours=7)).dt.strftime('%Y-%m-%d')
             df['next_ts'] = df['ts'].shift(-1).fillna(pd.to_datetime(end))
-            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds() / 60.).round(0)
+            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds() / 60.).round(1)
             df['status'] = df['status'].str.upper()
 
             daily_summary = df.groupby(['date_shift', 'status'])['duration'].sum().reset_index()
@@ -175,7 +180,7 @@ def get_status_ratio_monthly_by_mc(mc: str):
                 details = []
                 if total_nodata_duration < 1440 and total_d > 0:
                     day_data = day_data.copy()
-                    day_data['ratio'] = (day_data['duration'] / total_d * 100).round(0)
+                    day_data['ratio'] = (day_data['duration'] / total_d * 100).round(1)
                     details = day_data[['status', 'duration', 'ratio']].to_dict(orient='records')
                     
                 result_data.append({
@@ -187,10 +192,13 @@ def get_status_ratio_monthly_by_mc(mc: str):
 
     except Exception as e:
         return {"error": str(e)}
+    finally:
+        client.close()
     
 # get status ratio shift monthly
 @router.get("/ratio-monthly/{mc}/{shift}/{status}")
 def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
+    client = get_db_client()
     result_data = []
   # find end month
     year = datetime.now().year
@@ -205,7 +213,7 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
     
     base = datetime(year, month, 1, 7, 0, 0)
     try:
-        for i in range(0,(last_day)):
+        for i in range(0,(last_day-1)):
             start = base + timedelta(days=i)
             end = start + timedelta(days=1) - timedelta(seconds=1)
             params = {'mc': mc, 'start': start, 'end': end}
@@ -247,7 +255,7 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
             df = df.sort_values(['ts'])
             df['next_ts'] = df['ts'].shift(-1)
             df['next_ts'] = df['ts'].shift(-1).fillna(pd.to_datetime(end))
-            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds()).round(0)
+            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds()).round(1)
             df = df[df['shift'] == shift].copy()
             
             df['date_shifted'] = (df['ts'] - timedelta(hours=7)).dt.strftime('%Y-%m-%d')
@@ -265,7 +273,7 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
                 details = []
                 if total_d > 0:
                     day_data = day_data.copy()
-                    day_data['ratio'] = (day_data['duration'] / total_d * 100).round(0)
+                    day_data['ratio'] = (day_data['duration'] / total_d * 100).round(1)
 
                     day_data = day_data[day_data["status"] == status]
                     
@@ -280,9 +288,12 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        client.close()
     
 @router.get("/timeline/{mc}")
 def get_timeline_data(mc: str):
+    client = get_db_client()
     now = datetime.now()
     if now.hour < 7:
         start_date = (now - timedelta(days=1)).replace(hour=7, minute=0, second=0)
@@ -336,7 +347,7 @@ def get_timeline_data(mc: str):
             df['next_ts'] = df['ts'].shift(-1)
             df['next_ts'] = df['next_ts'].fillna(pd.to_datetime(end))
 
-            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds()).round(0)
+            df['duration'] = ((df['next_ts'] - df['ts']).dt.total_seconds()).round(1)
             df['status'] = df['status'].str.upper()
             df = df[['ts', 'status', 'duration']]
 
@@ -347,3 +358,5 @@ def get_timeline_data(mc: str):
             status_code=500,
             detail=str(e)
         )
+    finally:
+        client.close()
