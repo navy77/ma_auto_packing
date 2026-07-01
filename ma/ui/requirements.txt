@@ -1,5 +1,0 @@
-streamlit-autorefresh
-streamlit_echarts
-streamlit==1.58.0
-streamlit-option-menu
-python-dotenv

@@ -4,6 +4,7 @@
   import { RefreshCw, Play, Pause, AlertTriangle, Cpu } from '@lucide/svelte';
   import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
   import ChartComponent from '$lib/components/ChartComponent.svelte';
+  import { PUBLIC_API_HOST, PUBLIC_API_PORT } from '$env/static/public';
 
   // Config mapping of legend colors requested by the user
   const colors: Record<string, string> = {
@@ -50,7 +51,7 @@
       const status = selectedStatus;
       
       // 1. Fetch Pie Chart Data
-      const resPie = await fetch(`http://localhost:8001/status/ratio-daily/${mc}`);
+      const resPie = await fetch(`http://${PUBLIC_API_HOST}:${PUBLIC_API_PORT}/status/ratio-daily/${mc}`);
       const pieRaw = resPie.ok ? await resPie.json() : [];
       const pieJson = pieRaw.map((item: any) => ({
         ...item,
@@ -58,7 +59,7 @@
       }));
 
       // 2. Fetch Timeline Chart Data
-      const resTimeline = await fetch(`http://localhost:8001/status/timeline/${mc}`);
+      const resTimeline = await fetch(`http://${PUBLIC_API_HOST}:${PUBLIC_API_PORT}/status/timeline/${mc}`);
       const timelineRaw = resTimeline.ok ? await resTimeline.json() : [];
       const timelineJson = timelineRaw.map((item: any) => ({
         ...item,
@@ -66,7 +67,7 @@
       }));
 
       // 3. Fetch Monthly Stacked Bar Data
-      const resMonthly = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}`);
+      const resMonthly = await fetch(`http://${PUBLIC_API_HOST}:${PUBLIC_API_PORT}/status/ratio-monthly/${mc}`);
       const monthlyRaw = resMonthly.ok ? await resMonthly.json() : { daily_data: [] };
       const monthlyJson = {
         ...monthlyRaw,
@@ -81,7 +82,7 @@
 
       // 4. Fetch Monthly Shift Comparison Data for Selected Status
       const statusForApi = status === 'NO_DATA' ? 'NO DATA' : status;
-      const resM = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}/M/${statusForApi}`);
+      const resM = await fetch(`http://${PUBLIC_API_HOST}:${PUBLIC_API_PORT}/status/ratio-monthly/${mc}/M/${statusForApi}`);
       const mRaw = resM.ok ? await resM.json() : { daily_data: [] };
       const mJson = {
         ...mRaw,
@@ -94,7 +95,7 @@
         }))
       };
 
-      const resN = await fetch(`http://localhost:8001/status/ratio-monthly/${mc}/N/${statusForApi}`);
+      const resN = await fetch(`http://${PUBLIC_API_HOST}:${PUBLIC_API_PORT}/status/ratio-monthly/${mc}/N/${statusForApi}`);
       const nRaw = resN.ok ? await resN.json() : { daily_data: [] };
       const nJson = {
         ...nRaw,
@@ -115,7 +116,7 @@
       shiftNData = nJson.daily_data || [];
     } catch (err: any) {
       console.error(err);
-      errorMessage = "Failed to connect to the backend server. Please make sure the API is running at http://localhost:8001.";
+      errorMessage = "Failed to connect to the backend server. Please make sure the API is running at http://host.docker.internal:8001.";
     } finally {
       isLoading = false;
     }

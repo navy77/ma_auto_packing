@@ -3,6 +3,4 @@ node_modules
 build
 .git
 .vscode
-.env
-.env.*
 !.env.example

@@ -50,12 +50,12 @@
     </nav>
 
     <!-- Footer -->
-    <div class="p-4 border-t border-slate-100 dark:border-zinc-800 text-xs text-slate-400 dark:text-zinc-500 flex items-center gap-2 transition-all duration-300 {isCollapsed ? 'justify-center' : ''}">
+    <!-- <div class="p-4 border-t border-slate-100 dark:border-zinc-800 text-xs text-slate-400 dark:text-zinc-500 flex items-center gap-2 transition-all duration-300 {isCollapsed ? 'justify-center' : ''}">
       <Database class="h-4 w-4 text-slate-400 dark:text-zinc-500 shrink-0" />
       {#if !isCollapsed}
         <span class="whitespace-nowrap overflow-hidden">Status: API Connected</span>
       {/if}
-    </div>
+    </div> -->
   </aside>
 
   <!-- Main Content Area -->

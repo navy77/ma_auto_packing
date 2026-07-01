@@ -1,1 +1,2 @@
-docker build --no-cache -t mic/mms_api:1.0.0 . 
+docker build --no-cache -t mic/mms_api:1.0.0 . \
+docker compose up -d

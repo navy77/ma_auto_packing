@@ -115,8 +115,9 @@ def get_status_ratio_monthly_by_mc(mc: str):
     # find end month
     bangkok_tz = timezone(timedelta(hours=7))
     now = datetime.now(bangkok_tz)
-    
-    if now.hour < 7:
+    if now.day == 1:
+        shift_date = now - timedelta(days=1)
+    elif now.hour < 7:
         shift_date = now - timedelta(days=1)
     else:
         shift_date = now
@@ -124,8 +125,6 @@ def get_status_ratio_monthly_by_mc(mc: str):
     year = shift_date.year
     month = shift_date.month
     last_day = calendar.monthrange(year,month )[1]
-    
-    today_shift_start = shift_date.replace(hour=7, minute=0, second=0, microsecond=0)
 
     query_1 = """SELECT ts, shift, device_id, status FROM default.status_tb WHERE device_id = %(mc)s
         AND ts < %(start)s ORDER BY ts DESC LIMIT 1"""
@@ -136,13 +135,14 @@ def get_status_ratio_monthly_by_mc(mc: str):
     base = datetime(year, month, 1, 7, 0, 0, tzinfo=bangkok_tz)
     try:
         now_naive = now.replace(tzinfo=None)
+    
         for i in range(0, last_day):
             start = (base + timedelta(days=i)).replace(tzinfo=None)
+   
             if start.date() >= now_naive.date():
                 break
             end_of_day = start + timedelta(days=1) - timedelta(seconds=1)
             end = min(end_of_day, now_naive)
-            print(end)
             params = {'mc': mc, 'start': start, 'end': end}
             result_1 = client.query(query_1, params)
             result_2 = client.query(query_2, params)
@@ -176,8 +176,7 @@ def get_status_ratio_monthly_by_mc(mc: str):
 
                 df_raw = pd.concat([df1, df2], ignore_index=True)
 
-            result_data.append(df_raw)
-            
+            result_data.append(df_raw) 
         if not result_data:
             df = pd.DataFrame(columns=['ts', 'shift', 'device_id', 'status'])
         else:
@@ -239,7 +238,9 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
     bangkok_tz = timezone(timedelta(hours=7))
     now = datetime.now(bangkok_tz)
     
-    if now.hour < 7:
+    if now.day == 1:
+        shift_date = now - timedelta(days=1)
+    elif now.hour < 7:
         shift_date = now - timedelta(days=1)
     else:
         shift_date = now
@@ -248,8 +249,6 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
     month = shift_date.month
     last_day = calendar.monthrange(year,month )[1]
     
-    today_shift_start = shift_date.replace(hour=7, minute=0, second=0, microsecond=0)
-
     query_1 = """SELECT ts, shift, device_id, status FROM default.status_tb WHERE device_id = %(mc)s
         AND ts < %(start)s ORDER BY ts DESC LIMIT 1"""
 
@@ -270,8 +269,6 @@ def get_status_ratio_shift_monthly_by_mc(mc: str, shift: str,status: str):
             result_2 = client.query(query_2, params)
             df1 = pd.DataFrame(result_1.result_rows, columns=result_1.column_names)
             df2 = pd.DataFrame(result_2.result_rows, columns=result_2.column_names)
-
-            
 
             if df2.empty:
                 master_data = [{"ts":start,"shift":"M","device_id":mc,"status":"NO DATA"}]
